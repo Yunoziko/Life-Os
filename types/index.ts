@@ -12,4 +12,9 @@ export type SearchResult = {
   href: string;
 };
 
-export type CreateEntityType = "task" | "note" | "goal" | "project";
+export type CreateEntityType = "task" | "note" | "goal" | "project" | "habit" | "event";
+
+export type DashboardInsight = {
+  body: string;
+  source: "derived" | "insufficient";
+};

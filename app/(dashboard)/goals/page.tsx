@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Goal } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getGoals } from "@/lib/db/workspace";
@@ -25,6 +26,7 @@ export default async function GoalsPage() {
       <div className="grid gap-3 md:grid-cols-2">
         {goals.map((goal) => (
           <article key={goal.id} className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+            <Link href={`/goals/${goal.id}`} className="block">
             <div className="mb-3 flex items-start justify-between gap-3">
               <h2 className="text-sm font-medium">{goal.title}</h2>
               <span className="text-xs text-muted-foreground">{goal.status.toLowerCase()}</span>
@@ -42,6 +44,7 @@ export default async function GoalsPage() {
               {goal.progress}%
               {goal.targetDate ? ` · ${formatShortDate(goal.targetDate, timezone)}` : ""}
             </p>
+            </Link>
           </article>
         ))}
       </div>

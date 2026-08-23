@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CheckSquare } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getTasks } from "@/lib/db/workspace";
@@ -29,14 +30,15 @@ export default async function TasksPage() {
           <li key={task.id} className="flex items-start gap-3 px-4 py-3.5">
             <TaskCompleteButton taskId={task.id} done={task.status === "DONE"} />
             <div className="min-w-0 flex-1">
-              <p
+              <Link
+                href={`/tasks/${task.id}`}
                 className={cn(
-                  "text-sm",
+                  "text-sm hover:underline",
                   task.status === "DONE" && "text-muted-foreground line-through"
                 )}
               >
                 {task.title}
-              </p>
+              </Link>
               {task.description ? (
                 <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{task.description}</p>
               ) : null}

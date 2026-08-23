@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getUpcomingEvents } from "@/lib/db/workspace";
 import { formatShortDate, formatTime } from "@/lib/utils/date";
 import { ModulePage } from "@/components/shared/module-page";
+import { CreateTrigger } from "@/components/dashboard/create-trigger";
 
 export const metadata = { title: "Calendar" };
 
@@ -18,6 +19,7 @@ export default async function CalendarPage() {
       icon={CalendarDays}
       emptyTitle="No upcoming events"
       emptyDescription="This calendar stays empty until something is actually scheduled."
+      action={<CreateTrigger type="event">Add event</CreateTrigger>}
       isEmpty={events.length === 0}
     >
       <ul className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-card">

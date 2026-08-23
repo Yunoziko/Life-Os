@@ -45,6 +45,33 @@ export function getHabits(userId: string) {
   });
 }
 
+export function getTaskById(userId: string, id: string) {
+  return prisma.task.findFirst({
+    where: { id, userId },
+    include: {
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, title: true } },
+    },
+  });
+}
+
+export function getGoalById(userId: string, id: string) {
+  return prisma.goal.findFirst({
+    where: { id, userId },
+    include: {
+      tasks: {
+        where: { status: { not: "CANCELLED" } },
+        orderBy: [{ status: "asc" }, { dueAt: "asc" }],
+        take: 20,
+      },
+      projects: {
+        where: { status: { not: "ARCHIVED" } },
+        take: 8,
+      },
+    },
+  });
+}
+
 export function getUpcomingEvents(userId: string) {
   return prisma.calendarEvent.findMany({
     where: {
