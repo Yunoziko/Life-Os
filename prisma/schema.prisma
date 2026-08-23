@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+}
+
+enum CalendarEventSource {
+  MANUAL
+  TASK
+  GOAL
+}
+
+enum AIMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  authenticators Authenticator[]
+  profile       Profile?
+  tasks         Task[]
+  goals         Goal[]
+  projects      Project[]
+  notes         Note[]
+  habits        Habit[]
+  habitLogs     HabitLog[]
+  events        CalendarEvent[]
+  conversations AIConversation[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Authenticator {
+  credentialID        String  @unique
+  userId              String
+  providerAccountId   String
+  credentialPublicKey String
+  counter             Int
+  credentialDeviceType String
+  credentialBackedUp  Boolean
+  transports          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String?
+  timezone    String   @default("UTC")
+  weekStartsOn Int     @default(1)
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  userId      String
+  projectId   String?
+  goalId      String?
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(NONE)
+  dueAt       DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  goal    Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, dueAt])
+  @@index([projectId])
+  @@index([goalId])
+}
+
+model Goal {
+  id          String     @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  status      GoalStatus @default(ACTIVE)
+  targetDate  DateTime?
+  progress    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks    Task[]
+  projects Project[]
+
+  @@index([userId, status])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  userId      String
+  goalId      String?
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal  Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  tasks Task[]
+  notes Note[]
+
+  @@index([userId, status])
+  @@index([goalId])
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String?
+  title     String
+  content   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+  @@index([projectId])
+}
+
+model Habit {
+  id        String         @id @default(uuid())
+  userId    String
+  name      String
+  frequency HabitFrequency @default(DAILY)
+  archived  Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+
+  @@index([userId, archived])
+}
+
+model HabitLog {
+  id        String   @id @default(uuid())
+  userId    String
+  habitId   String
+  date      DateTime
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+}
+
+model CalendarEvent {
+  id          String              @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean             @default(false)
+  source      CalendarEventSource @default(MANUAL)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+}
+
+model AIConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model AIMessage {
+  id             String        @id @default(uuid())
+  conversationId String
+  role           AIMessageRole
+  content        String
+  createdAt      DateTime      @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
