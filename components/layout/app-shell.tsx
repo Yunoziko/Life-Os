@@ -9,10 +9,13 @@ import { GlobalSearch } from "@/components/search/global-search";
 import { CreateDialog } from "@/components/create/create-dialog";
 import { WorkspaceProvider } from "@/components/workspace-provider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { AssignableGoal, AssignableProject } from "@/lib/db/tasks";
 
 export function AppShell({
   children,
   user,
+  projects = [],
+  goals = [],
 }: {
   children: React.ReactNode;
   user: {
@@ -20,11 +23,13 @@ export function AppShell({
     email?: string | null;
     image?: string | null;
   };
+  projects?: AssignableProject[];
+  goals?: AssignableGoal[];
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <WorkspaceProvider>
+    <WorkspaceProvider projects={projects} goals={goals}>
       <div className="flex min-h-dvh bg-background">
         <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
           <Sidebar />

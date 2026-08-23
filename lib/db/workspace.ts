@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { resolveGoalProgress } from "@/lib/utils/progress";
 
 export function getTasks(userId: string) {
   return prisma.task.findMany({
@@ -8,12 +9,28 @@ export function getTasks(userId: string) {
   });
 }
 
-export function getGoals(userId: string) {
-  return prisma.goal.findMany({
+export async function getGoals(userId: string) {
+  const goals = await prisma.goal.findMany({
     where: { userId },
+    include: {
+      milestones: { select: { completed: true } },
+      tasks: {
+        where: { status: { not: "CANCELLED" } },
+        select: { status: true },
+      },
+    },
     orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
     take: 40,
   });
+
+  return goals.map((goal) => ({
+    ...goal,
+    progress: resolveGoalProgress({
+      manual: goal.progress,
+      milestones: goal.milestones,
+      tasks: goal.tasks,
+    }).percent,
+  }));
 }
 
 export function getProjects(userId: string) {
@@ -49,20 +66,20 @@ export function getTaskById(userId: string, id: string) {
   return prisma.task.findFirst({
     where: { id, userId },
     include: {
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, name: true, color: true } },
       goal: { select: { id: true, title: true } },
     },
   });
 }
 
-export function getGoalById(userId: string, id: string) {
-  return prisma.goal.findFirst({
+export async function getGoalById(userId: string, id: string) {
+  const goal = await prisma.goal.findFirst({
     where: { id, userId },
     include: {
+      milestones: { orderBy: { createdAt: "asc" } },
       tasks: {
         where: { status: { not: "CANCELLED" } },
         orderBy: [{ status: "asc" }, { dueAt: "asc" }],
-        take: 20,
       },
       projects: {
         where: { status: { not: "ARCHIVED" } },
@@ -70,6 +87,17 @@ export function getGoalById(userId: string, id: string) {
       },
     },
   });
+
+  if (!goal) return null;
+
+  return {
+    ...goal,
+    progress: resolveGoalProgress({
+      manual: goal.progress,
+      milestones: goal.milestones,
+      tasks: goal.tasks,
+    }).percent,
+  };
 }
 
 export function getUpcomingEvents(userId: string) {

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
-import { addCalendarDays, utcMidnightFromCalendarDate, zonedDayRange } from "@/lib/utils/date";
+import { addCalendarDays, calendarDate, utcMidnightFromCalendarDate, zonedDayRange } from "@/lib/utils/date";
+import { calculateHabitStats, habitWeekday, streakFromKeys } from "@/lib/habits/stats";
+import { calculateTaskProgress, resolveGoalProgress } from "@/lib/utils/progress";
 import type { TaskPriority, TaskStatus } from "@/generated/prisma/enums";
 
 export type DashboardTask = {
@@ -35,8 +37,10 @@ export type DashboardHabit = {
 };
 
 export type DashboardFocus = {
-  goalId: string;
-  goalTitle: string;
+  goalId: string | null;
+  goalTitle: string | null;
+  projectId: string | null;
+  projectName: string | null;
   progress: number;
   taskId: string | null;
   taskTitle: string | null;
@@ -74,6 +78,7 @@ export async function getDashboardData(
     upcomingEvents,
     habits,
     counts,
+    activeProject,
   ] = await Promise.all([
     prisma.task.findMany({
       where: {
@@ -122,12 +127,13 @@ export async function getDashboardData(
       },
     }),
     prisma.goal.findMany({
-      where: { userId, status: "ACTIVE" },
+      where: { userId, status: { in: ["ACTIVE", "NOT_STARTED"] } },
       include: {
+        milestones: { select: { completed: true } },
         tasks: {
-          where: { status: { in: ["TODO", "IN_PROGRESS"] } },
+          where: { status: { not: "CANCELLED" } },
+          select: { id: true, title: true, dueAt: true, status: true },
           orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }],
-          take: 3,
         },
       },
       orderBy: [{ targetDate: "asc" }, { updatedAt: "desc" }],
@@ -142,7 +148,7 @@ export async function getDashboardData(
       take: 5,
     }),
     prisma.habit.findMany({
-      where: { userId, archived: false },
+      where: { userId, archived: false, paused: false },
       include: {
         logs: {
           where: { date: { gte: habitLookback } },
@@ -160,6 +166,16 @@ export async function getDashboardData(
       prisma.habit.count({ where: { userId } }),
       prisma.calendarEvent.count({ where: { userId } }),
     ]),
+    prisma.project.findFirst({
+      where: { userId, status: "ACTIVE" },
+      include: {
+        tasks: {
+          where: { status: { not: "CANCELLED" } },
+          select: { id: true, title: true, dueAt: true, status: true },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   const todayTasks: DashboardTask[] = rawTasks
@@ -179,17 +195,17 @@ export async function getDashboardData(
     });
 
   const mappedHabits: DashboardHabit[] = habits.map((habit) => {
-    const completedToday = habit.logs.some(
-      (log) => log.completed && log.date.toISOString().slice(0, 10) === ymd
-    );
+    const completedDates = habit.logs
+      .filter((log) => log.completed)
+      .map((log) => log.date.toISOString().slice(0, 10));
+    const weekday = habitWeekday(habit.startDate, habit.createdAt, timeZone);
+    const startYmd = calendarDate(timeZone, habit.startDate ?? habit.createdAt);
+    const stats = calculateHabitStats(completedDates, ymd, habit.frequency, weekday, 30, startYmd);
     return {
       id: habit.id,
       name: habit.name,
-      completedToday,
-      streak: streakFromKeys(
-        habit.logs.filter((log) => log.completed).map((log) => log.date.toISOString().slice(0, 10)),
-        ymd
-      ),
+      completedToday: completedDates.includes(ymd),
+      streak: stats.currentStreak,
     };
   });
 
@@ -202,7 +218,17 @@ export async function getDashboardData(
     ymd
   );
 
-  const focus = selectFocus(activeGoals, start, end);
+  const goalsWithProgress = activeGoals.map((goal) => ({
+    ...goal,
+    progress: resolveGoalProgress({
+      manual: goal.progress,
+      milestones: goal.milestones,
+      tasks: goal.tasks,
+    }).percent,
+    openTasks: goal.tasks.filter((task) => task.status === "TODO" || task.status === "IN_PROGRESS"),
+  }));
+
+  const focus = selectFocus(goalsWithProgress, activeProject, start, end);
 
   return {
     hasAnyData: counts.some((count) => count > 0),
@@ -213,7 +239,7 @@ export async function getDashboardData(
     highPriorityToday,
     todayTasks,
     focus,
-    activeGoals: activeGoals.map((goal) => ({
+    activeGoals: goalsWithProgress.map((goal) => ({
       id: goal.id,
       title: goal.title,
       progress: goal.progress,
@@ -236,16 +262,38 @@ function selectFocus(
     title: string;
     progress: number;
     targetDate: Date | null;
-    tasks: { id: string; title: string; dueAt: Date | null }[];
+    openTasks: { id: string; title: string; dueAt: Date | null }[];
   }[],
+  project: {
+    id: string;
+    name: string;
+    tasks: { id: string; title: string; dueAt: Date | null; status: string }[];
+  } | null,
   start: Date,
   end: Date
 ): DashboardFocus | null {
-  if (goals.length === 0) return null;
+  const projectProgress = project ? calculateTaskProgress(project.tasks) : null;
+  const projectTask =
+    project?.tasks
+      .filter((task) => task.status === "TODO" || task.status === "IN_PROGRESS")
+      .sort((a, b) => taskFocusRank(a.dueAt, start, end) - taskFocusRank(b.dueAt, start, end))[0] ?? null;
+
+  if (goals.length === 0) {
+    if (!project) return null;
+    return {
+      goalId: null,
+      goalTitle: null,
+      projectId: project.id,
+      projectName: project.name,
+      progress: projectProgress?.percent ?? 0,
+      taskId: projectTask?.id ?? null,
+      taskTitle: projectTask?.title ?? null,
+    };
+  }
 
   const ranked = [...goals].sort((a, b) => {
-    const aLinked = a.tasks.length > 0 ? 0 : 1;
-    const bLinked = b.tasks.length > 0 ? 0 : 1;
+    const aLinked = a.openTasks.length > 0 ? 0 : 1;
+    const bLinked = b.openTasks.length > 0 ? 0 : 1;
     if (aLinked !== bLinked) return aLinked - bLinked;
     const aTime = a.targetDate?.getTime() ?? Number.POSITIVE_INFINITY;
     const bTime = b.targetDate?.getTime() ?? Number.POSITIVE_INFINITY;
@@ -255,12 +303,15 @@ function selectFocus(
 
   const goal = ranked[0];
   const nextTask =
-    [...goal.tasks].sort((a, b) => taskFocusRank(a.dueAt, start, end) - taskFocusRank(b.dueAt, start, end))[0] ??
+    [...goal.openTasks].sort((a, b) => taskFocusRank(a.dueAt, start, end) - taskFocusRank(b.dueAt, start, end))[0] ??
+    projectTask ??
     null;
 
   return {
     goalId: goal.id,
     goalTitle: goal.title,
+    projectId: project?.id ?? null,
+    projectName: project?.name ?? null,
     progress: goal.progress,
     taskId: nextTask?.id ?? null,
     taskTitle: nextTask?.title ?? null,
@@ -271,24 +322,6 @@ function taskFocusRank(dueAt: Date | null, start: Date, end: Date) {
   if (dueAt && dueAt >= start && dueAt < end) return 0;
   if (dueAt && dueAt < start) return 1;
   return 2;
-}
-
-function streakFromKeys(keys: string[], today: string) {
-  const days = new Set(keys);
-  if (days.size === 0) return 0;
-
-  let cursor = today;
-  if (!days.has(cursor)) {
-    cursor = addCalendarDays(cursor, -1);
-    if (!days.has(cursor)) return 0;
-  }
-
-  let streak = 0;
-  while (days.has(cursor)) {
-    streak += 1;
-    cursor = addCalendarDays(cursor, -1);
-  }
-  return streak;
 }
 
 export function dashboardStatusLine(data: DashboardData) {

@@ -1,7 +1,14 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { isTypingTarget } from "@/lib/utils/keyboard";
+import type { AssignableGoal, AssignableProject } from "@/lib/db/tasks";
 import type { CreateEntityType } from "@/types";
+
+export type CreateDefaults = {
+  projectId?: string;
+  goalId?: string;
+};
 
 type WorkspaceContextValue = {
   commandOpen: boolean;
@@ -9,24 +16,63 @@ type WorkspaceContextValue = {
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
   createType: CreateEntityType | null;
-  openCreate: (type: CreateEntityType) => void;
+  createDefaults: CreateDefaults;
+  assignable: {
+    projects: AssignableProject[];
+    goals: AssignableGoal[];
+  };
+  openCreate: (type: CreateEntityType, defaults?: CreateDefaults) => void;
   closeCreate: () => void;
+  setPageDefaults: (defaults: CreateDefaults | null) => void;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+export function WorkspaceProvider({
+  children,
+  projects = [],
+  goals = [],
+}: {
+  children: React.ReactNode;
+  projects?: AssignableProject[];
+  goals?: AssignableGoal[];
+}) {
   const [commandOpen, setCommandOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [createType, setCreateType] = useState<CreateEntityType | null>(null);
+  const [createDefaults, setCreateDefaults] = useState<CreateDefaults>({});
+  const [pageDefaults, setPageDefaultsState] = useState<CreateDefaults>({});
 
-  const openCreate = useCallback((type: CreateEntityType) => {
+  const openCreate = useCallback((type: CreateEntityType, defaults?: CreateDefaults) => {
     setCommandOpen(false);
     setSearchOpen(false);
+    setCreateDefaults({ ...pageDefaults, ...defaults });
     setCreateType(type);
+  }, [pageDefaults]);
+
+  const closeCreate = useCallback(() => {
+    setCreateType(null);
+    setCreateDefaults(pageDefaults);
+  }, [pageDefaults]);
+
+  const setPageDefaults = useCallback((defaults: CreateDefaults | null) => {
+    const next = defaults ?? {};
+    setPageDefaultsState(next);
+    setCreateDefaults(next);
   }, []);
 
-  const closeCreate = useCallback(() => setCreateType(null), []);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key.toLowerCase() !== "n") return;
+      event.preventDefault();
+      openCreate("task");
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openCreate]);
 
   const value = useMemo(
     () => ({
@@ -35,10 +81,23 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       searchOpen,
       setSearchOpen,
       createType,
+      createDefaults,
+      assignable: { projects, goals },
       openCreate,
       closeCreate,
+      setPageDefaults,
     }),
-    [commandOpen, searchOpen, createType, openCreate, closeCreate]
+    [
+      commandOpen,
+      searchOpen,
+      createType,
+      createDefaults,
+      projects,
+      goals,
+      openCreate,
+      closeCreate,
+      setPageDefaults,
+    ]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

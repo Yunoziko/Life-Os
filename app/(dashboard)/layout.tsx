@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
+import { getAssignableOptions } from "@/lib/db/tasks";
 import { AppShell } from "@/components/layout/app-shell";
 
 export default async function DashboardLayout({
@@ -7,6 +8,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const [projects, goals] = await getAssignableOptions(user.id);
 
   return (
     <AppShell
@@ -15,6 +17,8 @@ export default async function DashboardLayout({
         email: user.email,
         image: user.image,
       }}
+      projects={projects}
+      goals={goals}
     >
       {children}
     </AppShell>

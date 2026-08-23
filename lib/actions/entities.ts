@@ -1,55 +1,104 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
+import { createEventSchema, createNoteSchema } from "@/lib/validations/entities";
+import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 import {
-  createEventSchema,
-  createGoalSchema,
-  createHabitSchema,
-  createNoteSchema,
-  createProjectSchema,
-  createTaskSchema,
-} from "@/lib/validations/entities";
-import { calendarDate, utcMidnightFromCalendarDate } from "@/lib/utils/date";
-import type { TaskPriority } from "@/generated/prisma/enums";
+  createTaskAction as persistTask,
+  updateTaskAction as persistTaskUpdate,
+  deleteTaskAction as persistTaskDelete,
+} from "@/lib/actions/tasks";
+import {
+  createProjectAction as persistProject,
+  updateProjectAction as persistProjectUpdate,
+} from "@/lib/actions/projects";
+import {
+  createGoalAction as persistGoal,
+  updateGoalAction as persistGoalUpdate,
+  updateGoalProgressAction as persistGoalProgress,
+  deleteGoalAction as persistGoalDelete,
+} from "@/lib/actions/goals";
+import {
+  createMilestoneAction as persistMilestone,
+  updateMilestoneAction as persistMilestoneUpdate,
+  toggleMilestoneAction as persistMilestoneToggle,
+  deleteMilestoneAction as persistMilestoneDelete,
+} from "@/lib/actions/milestones";
+import {
+  createHabitAction as persistHabit,
+  updateHabitAction as persistHabitUpdate,
+  toggleHabitAction as persistHabitToggle,
+  deleteHabitAction as persistHabitDelete,
+} from "@/lib/actions/habits";
 import type { ActionResult } from "@/types";
 
-function revalidateWorkspace() {
-  revalidatePath("/dashboard");
-  revalidatePath("/tasks");
-  revalidatePath("/goals");
-  revalidatePath("/notes");
-  revalidatePath("/projects");
-  revalidatePath("/calendar");
-  revalidatePath("/habits");
+export async function createTaskAction(formData: FormData) {
+  return persistTask(formData);
 }
 
-export async function createTaskAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createTaskSchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    dueAt: formData.get("dueAt"),
-  });
+export async function updateTaskAction(formData: FormData) {
+  return persistTaskUpdate(formData);
+}
 
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create task." };
-  }
+export async function deleteTaskAction(taskId: string) {
+  return persistTaskDelete(taskId);
+}
 
-  const task = await prisma.task.create({
-    data: {
-      userId: user.id,
-      title: parsed.data.title,
-      description: parsed.data.description || null,
-      dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
-      priority: (parsed.data.priority as TaskPriority | undefined) ?? "NONE",
-    },
-    select: { id: true },
-  });
+export async function createProjectAction(formData: FormData) {
+  return persistProject(formData);
+}
 
-  revalidateWorkspace();
-  return { ok: true, data: task };
+export async function updateProjectAction(formData: FormData) {
+  return persistProjectUpdate(formData);
+}
+
+export async function createGoalAction(formData: FormData) {
+  return persistGoal(formData);
+}
+
+export async function updateGoalAction(formData: FormData) {
+  return persistGoalUpdate(formData);
+}
+
+export async function updateGoalProgressAction(formData: FormData) {
+  return persistGoalProgress(formData);
+}
+
+export async function deleteGoalAction(goalId: string) {
+  return persistGoalDelete(goalId);
+}
+
+export async function createMilestoneAction(formData: FormData) {
+  return persistMilestone(formData);
+}
+
+export async function updateMilestoneAction(formData: FormData) {
+  return persistMilestoneUpdate(formData);
+}
+
+export async function toggleMilestoneAction(milestoneId: string) {
+  return persistMilestoneToggle(milestoneId);
+}
+
+export async function deleteMilestoneAction(milestoneId: string) {
+  return persistMilestoneDelete(milestoneId);
+}
+
+export async function createHabitAction(formData: FormData) {
+  return persistHabit(formData);
+}
+
+export async function updateHabitAction(formData: FormData) {
+  return persistHabitUpdate(formData);
+}
+
+export async function toggleHabitAction(habitId: string) {
+  return persistHabitToggle(habitId);
+}
+
+export async function deleteHabitAction(habitId: string) {
+  return persistHabitDelete(habitId);
 }
 
 export async function createNoteAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
@@ -76,149 +125,39 @@ export async function createNoteAction(formData: FormData): Promise<ActionResult
   return { ok: true, data: note };
 }
 
-export async function createGoalAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createGoalSchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    targetDate: formData.get("targetDate"),
-  });
 
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create goal." };
-  }
-
-  const goal = await prisma.goal.create({
-    data: {
-      userId: user.id,
-      title: parsed.data.title,
-      description: parsed.data.description || null,
-      targetDate: parsed.data.targetDate ? new Date(parsed.data.targetDate) : null,
-    },
-    select: { id: true },
-  });
-
-  revalidateWorkspace();
-  return { ok: true, data: goal };
-}
-
-export async function createProjectAction(
-  formData: FormData
-): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createProjectSchema.safeParse({
-    name: formData.get("name"),
-    description: formData.get("description"),
-  });
-
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create project." };
-  }
-
-  const project = await prisma.project.create({
-    data: {
-      userId: user.id,
-      name: parsed.data.name,
-      description: parsed.data.description || null,
-    },
-    select: { id: true },
-  });
-
-  revalidateWorkspace();
-  return { ok: true, data: project };
-}
-
-export async function completeTaskAction(taskId: string): Promise<ActionResult> {
+export async function completeTaskAction(taskId: string): Promise<ActionResult<{ done: boolean }>> {
   const user = await requireUser();
 
   const task = await prisma.task.findFirst({
     where: { id: taskId, userId: user.id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, projectId: true, goalId: true },
   });
 
   if (!task) {
     return { ok: false, error: "Task not found." };
   }
 
-  await prisma.task.update({
-    where: { id: task.id },
-    data:
-      task.status === "DONE"
-        ? { status: "TODO", completedAt: null }
-        : { status: "DONE", completedAt: new Date() },
-  });
-
-  revalidateWorkspace();
-  return { ok: true };
-}
-
-export async function createHabitAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createHabitSchema.safeParse({
-    name: formData.get("name"),
-    frequency: formData.get("frequency") || "DAILY",
-  });
-
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create habit." };
-  }
-
-  const habit = await prisma.habit.create({
-    data: {
-      userId: user.id,
-      name: parsed.data.name,
-      frequency: parsed.data.frequency,
-    },
-    select: { id: true },
-  });
-
-  revalidateWorkspace();
-  return { ok: true, data: habit };
-}
-
-export async function toggleHabitAction(habitId: string): Promise<ActionResult<{ completed: boolean }>> {
-  const user = await requireUser();
-  const timezone = user.profile?.timezone ?? "UTC";
-  const date = utcMidnightFromCalendarDate(calendarDate(timezone));
-
-  const habit = await prisma.habit.findFirst({
-    where: { id: habitId, userId: user.id, archived: false },
-    select: { id: true },
-  });
-
-  if (!habit) {
-    return { ok: false, error: "Habit not found." };
-  }
-
-  const existing = await prisma.habitLog.findUnique({
-    where: { habitId_date: { habitId: habit.id, date } },
-  });
-
-  if (existing?.completed) {
-    await prisma.habitLog.delete({ where: { id: existing.id } });
-    revalidateWorkspace();
-    return { ok: true, data: { completed: false } };
-  }
-
-  if (existing) {
-    await prisma.habitLog.update({
-      where: { id: existing.id },
-      data: { completed: true },
+  try {
+    const done = task.status !== "DONE";
+    await prisma.task.update({
+      where: { id: task.id },
+      data: done
+        ? { status: "DONE", completedAt: new Date() }
+        : { status: "TODO", completedAt: null },
     });
-  } else {
-    await prisma.habitLog.create({
-      data: {
-        userId: user.id,
-        habitId: habit.id,
-        date,
-        completed: true,
-      },
-    });
-  }
 
-  revalidateWorkspace();
-  return { ok: true, data: { completed: true } };
+    revalidateWorkspace([
+      `/tasks/${task.id}`,
+      task.projectId ? `/projects/${task.projectId}` : "",
+      task.goalId ? `/goals/${task.goalId}` : "",
+    ].filter(Boolean));
+    return { ok: true, data: { done } };
+  } catch {
+    return { ok: false, error: "Could not update the task. Try again." };
+  }
 }
+
 
 export async function createEventAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
   const user = await requireUser();
