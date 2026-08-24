@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/session";
 import { PageHeader } from "@/components/layout/page-header";
+import { SettingsNav } from "@/components/settings/settings-nav";
 import { IntegrationsPanel } from "@/components/integrations/integrations-panel";
 import { listPublicIntegrations } from "@/lib/integrations/accounts";
 import { googleCalendarProvider, gmailProvider } from "@/lib/integrations/google/provider";
@@ -11,7 +12,7 @@ export const metadata = { title: "Integrations" };
 export default async function IntegrationsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ connected?: string; error?: string; notice?: string }>;
+  searchParams: Promise<{ connected?: string; error?: string; notice?: string; upgrade?: string }>;
 }) {
   const user = await requireUser();
   const params = await searchParams;
@@ -26,6 +27,7 @@ export default async function IntegrationsSettingsPage({
         title="Integrations"
         description="Connect the accounts LifeOS should read from. You can disconnect at any time."
       />
+      <SettingsNav current="integrations" />
 
       <section className="rounded-2xl border border-border/70 bg-muted/30 p-5">
         <p className="text-sm leading-6 text-muted-foreground">
@@ -42,6 +44,7 @@ export default async function IntegrationsSettingsPage({
         connected={connected}
         error={params.error}
         notice={params.notice}
+        upgrade={params.upgrade === "1"}
       />
     </div>
   );

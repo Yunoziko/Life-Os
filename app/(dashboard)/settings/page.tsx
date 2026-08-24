@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SettingsNav } from "@/components/settings/settings-nav";
 
 export const metadata = { title: "Settings" };
 
@@ -17,6 +18,7 @@ export default async function SettingsPage() {
         title="Settings"
         description="Keep the workspace quiet, personal, and under your control."
       />
+      <SettingsNav current="appearance" />
 
       <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <h2 className="text-sm font-medium">Integrations</h2>
@@ -30,6 +32,14 @@ export default async function SettingsPage() {
       </section>
 
       <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+        <h2 className="text-sm font-medium">Billing</h2>
+        <p className="mt-1 mb-4 text-sm text-muted-foreground">Plan, usage, and LifeOS Pro.</p>
+        <Link href="/settings/billing" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+          Open billing
+        </Link>
+      </section>
+
+      <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <h2 className="text-sm font-medium">Appearance</h2>
         <p className="mt-1 mb-4 text-sm text-muted-foreground">
           Light, dark, or follow the system.
@@ -37,9 +47,14 @@ export default async function SettingsPage() {
         <ThemeToggle />
       </section>
 
-      <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+      <section id="account" className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <h2 className="text-sm font-medium">Account</h2>
         <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          Account deletion is not offered in this release. If you later delete an account with an
+          active Pro subscription, LifeOS will cancel the Razorpay subscription first rather than
+          leaving a paid plan running.
+        </p>
         <div className="mt-4">
           <SignOutButton />
         </div>
@@ -47,3 +62,4 @@ export default async function SettingsPage() {
     </div>
   );
 }
+

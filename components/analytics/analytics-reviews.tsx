@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { generateDailyBriefAction, generateWeeklyReviewAction } from "@/lib/actions/analytics";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { Button } from "@/components/ui/button";
+import { isUpgradeResult } from "@/lib/billing/action";
+import { useUpgrade } from "@/components/billing/upgrade-provider";
 import type { AnalyticsRangeId } from "@/lib/analytics/range";
 
 export function AnalyticsReviews({
@@ -65,6 +67,7 @@ function ReviewPanel({
 }) {
   const [pending, setPending] = useState(false);
   const [text, setText] = useState<string | null>(null);
+  const { openUpgrade } = useUpgrade();
 
   async function onGenerate() {
     setPending(true);
@@ -75,6 +78,10 @@ function ReviewPanel({
     const result = kind === "weekly" ? await generateWeeklyReviewAction(data) : await generateDailyBriefAction(data);
     setPending(false);
     if (!result.ok) {
+      if (isUpgradeResult(result)) {
+        openUpgrade(result.feature);
+        return;
+      }
       toast.error(result.error);
       return;
     }

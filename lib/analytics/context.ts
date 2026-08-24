@@ -41,7 +41,6 @@ export function buildLifeAnalyticsContext(analytics: LifeAnalytics) {
         streakHabit: analytics.habits.streakHabit
           ? { name: analytics.habits.streakHabit.name, streak: analytics.habits.streakHabit.streak }
           : null,
-        leastConsistent: analytics.habits.leastConsistent?.name ?? null,
       },
       calendar: {
         using: analytics.calendar.using,

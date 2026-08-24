@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import type { IntegrationSlug, PublicIntegration } from "@/lib/integrations/types";
 import { cn } from "@/lib/utils";
+import { useUpgrade } from "@/components/billing/upgrade-provider";
 
 const ICONS: Record<IntegrationSlug, typeof CalendarDays> = {
   "google-calendar": CalendarDays,
@@ -49,6 +50,7 @@ export function IntegrationsPanel({
   notice,
   error,
   connected,
+  upgrade,
 }: {
   integrations: PublicIntegration[];
   googleConfigured: boolean;
@@ -56,8 +58,10 @@ export function IntegrationsPanel({
   notice?: string;
   error?: string;
   connected?: string;
+  upgrade?: boolean;
 }) {
   const router = useRouter();
+  const { openUpgrade } = useUpgrade();
   const [pending, setPending] = useState<string | null>(null);
   const [managing, setManaging] = useState<PublicIntegration | null>(null);
 
@@ -72,6 +76,13 @@ export function IntegrationsPanel({
       router.replace("/settings/integrations");
     }
   }, [connected, error, integrations, notice, router]);
+
+  useEffect(() => {
+    if (upgrade) {
+      openUpgrade("INTEGRATIONS");
+      router.replace("/settings/integrations");
+    }
+  }, [openUpgrade, router, upgrade]);
 
   function configuredFor(slug: IntegrationSlug) {
     if (slug === "github") return githubConfigured;

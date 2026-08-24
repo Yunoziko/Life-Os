@@ -9,6 +9,8 @@ import {
 } from "@/lib/validations/entities";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 import { resolveGoalProgress } from "@/lib/utils/progress";
+import { assertWithinLimit } from "@/lib/billing/entitlements";
+import { entitlementActionError } from "@/lib/billing/action";
 import type { ActionResult } from "@/types";
 
 function optionalDate(value?: string) {
@@ -52,6 +54,7 @@ export async function createGoalAction(formData: FormData): Promise<ActionResult
     .slice(0, 8);
 
   try {
+    await assertWithinLimit(user.id, "GOALS");
     const goal = await prisma.goal.create({
       data: {
         userId: user.id,
@@ -82,8 +85,8 @@ export async function createGoalAction(formData: FormData): Promise<ActionResult
 
     revalidateWorkspace([`/goals/${goal.id}`]);
     return { ok: true, data: goal };
-  } catch {
-    return { ok: false, error: "Could not create the goal. Try again." };
+  } catch (error) {
+    return entitlementActionError(error) ?? { ok: false, error: "Could not create the goal. Try again." };
   }
 }
 

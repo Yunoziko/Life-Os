@@ -25,6 +25,8 @@ import {
   refreshCalendarIfConnected,
   searchEmailsTool,
 } from "@/lib/ai/tools/integrations";
+import { assertWithinLimit } from "@/lib/billing/entitlements";
+import { EntitlementError } from "@/lib/billing/errors";
 
 const optionalId = z.string().uuid().optional();
 const optionalTitle = z.string().trim().min(1).max(160).optional();
@@ -641,6 +643,13 @@ export async function createGoal(ctx: ToolContext, args: unknown): Promise<ToolR
     .safeParse(args);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid goal.");
 
+  try {
+    await assertWithinLimit(ctx.userId, "GOALS");
+  } catch (error) {
+    if (error instanceof EntitlementError) return fail(error.message);
+    throw error;
+  }
+
   const goal = await prisma.goal.create({
     data: {
       userId: ctx.userId,
@@ -699,6 +708,13 @@ export async function createProject(ctx: ToolContext, args: unknown): Promise<To
     })
     .safeParse(args);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid project.");
+
+  try {
+    await assertWithinLimit(ctx.userId, "PROJECTS");
+  } catch (error) {
+    if (error instanceof EntitlementError) return fail(error.message);
+    throw error;
+  }
 
   const project = await prisma.project.create({
     data: {

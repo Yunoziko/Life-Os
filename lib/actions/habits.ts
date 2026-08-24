@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/auth/session";
 import { createHabitSchema, updateHabitSchema } from "@/lib/validations/entities";
 import { calendarDate, utcMidnightFromCalendarDate } from "@/lib/utils/date";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { assertWithinLimit } from "@/lib/billing/entitlements";
+import { entitlementActionError } from "@/lib/billing/action";
 import type { ActionResult } from "@/types";
 
 function optionalDate(value?: string) {
@@ -41,6 +43,7 @@ export async function createHabitAction(formData: FormData): Promise<ActionResul
   if (owned) return owned;
 
   try {
+    await assertWithinLimit(user.id, "HABITS");
     const habit = await prisma.habit.create({
       data: {
         userId: user.id,
@@ -55,8 +58,8 @@ export async function createHabitAction(formData: FormData): Promise<ActionResul
     });
     revalidateWorkspace([`/habits/${habit.id}`]);
     return { ok: true, data: habit };
-  } catch {
-    return { ok: false, error: "Could not create the habit. Try again." };
+  } catch (error) {
+    return entitlementActionError(error) ?? { ok: false, error: "Could not create the habit. Try again." };
   }
 }
 

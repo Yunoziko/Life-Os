@@ -42,6 +42,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/shared/native-select";
+import { isUpgradeResult } from "@/lib/billing/action";
+import { useUpgrade } from "@/components/billing/upgrade-provider";
+import type { FeatureKey } from "@/lib/billing/config";
 import type { CreateEntityType } from "@/types";
 
 const copy: Record<CreateEntityType, { title: string; description: string; href: string }> = {
@@ -104,15 +107,20 @@ export function CreateDialog() {
   const router = useRouter();
   const pathname = usePathname();
   const { createType, createDefaults, assignable, closeCreate } = useWorkspace();
+  const { openUpgrade } = useUpgrade();
   const [pending, setPending] = useState(false);
   const mobile = useMediaQuery("(max-width: 639px)");
 
   async function finish(
     type: CreateEntityType,
-    result: { ok: true; data?: { id?: string } } | { ok: false; error: string }
+    result: { ok: true; data?: { id?: string } } | { ok: false; error: string; code?: "upgrade_required"; feature?: string }
   ) {
     setPending(false);
     if (!result.ok) {
+      if (isUpgradeResult(result)) {
+        openUpgrade(result.feature as FeatureKey);
+        return;
+      }
       toast.error(result.error);
       return;
     }

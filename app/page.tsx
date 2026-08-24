@@ -20,6 +20,9 @@ export default async function HomePage() {
         <Logo />
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Link href="/pricing" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+            Pricing
+          </Link>
           <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
             Sign in
           </Link>
@@ -42,10 +45,10 @@ export default async function HomePage() {
             Get started
           </Link>
           <Link
-            href="/login"
+            href="/pricing"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-w-40")}
           >
-            Sign in
+            View pricing
           </Link>
         </div>
       </main>

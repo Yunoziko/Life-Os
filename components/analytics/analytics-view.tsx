@@ -7,6 +7,7 @@ import { AnalyticsFilters } from "@/components/analytics/analytics-filters";
 import { CompletionChart } from "@/components/analytics/completion-chart";
 import { HabitHeatmap } from "@/components/analytics/habit-heatmap";
 import { AnalyticsReviews } from "@/components/analytics/analytics-reviews";
+import { ProGate } from "@/components/billing/pro-gate";
 import { formatRelativeDeadline } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
 import type { AnalyticsRangeId } from "@/lib/analytics/range";
@@ -38,10 +39,12 @@ export function AnalyticsView({
   analytics,
   timezone,
   configured,
+  advanced = false,
 }: {
   analytics: SerializedAnalytics;
   timezone: string;
   configured: boolean;
+  advanced?: boolean;
 }) {
   const rangeId = analytics.range.id as AnalyticsRangeId;
   const chartWindow: 7 | 30 | 90 = analytics.range.dayCount >= 90 ? 90 : analytics.range.dayCount >= 30 ? 30 : 7;
@@ -67,24 +70,43 @@ export function AnalyticsView({
         connect. Showing {analytics.range.label.toLowerCase()}.
       </p>
       <OverviewGrid analytics={analytics} />
-      <CompletionChart series={analytics.taskTrend} timezone={timezone} defaultWindow={chartWindow} />
-      <HabitsBlock analytics={analytics} />
+      <CompletionChart
+        series={analytics.taskTrend}
+        timezone={timezone}
+        defaultWindow={advanced ? chartWindow : 7}
+        windows={advanced ? [7, 30, 90] : [7]}
+      />
+      <HabitsBlock analytics={analytics} advanced={advanced} />
       <GoalsBlock analytics={analytics} timezone={timezone} />
       <ProjectsBlock analytics={analytics} timezone={timezone} />
-      <CalendarBlock analytics={analytics} />
-      <GitHubBlock analytics={analytics} />
-      <EmailBlock analytics={analytics} />
-      <PatternsBlock analytics={analytics} />
+      {advanced ? (
+        <>
+          <CalendarBlock analytics={analytics} />
+          <GitHubBlock analytics={analytics} />
+          <EmailBlock analytics={analytics} />
+          <PatternsBlock analytics={analytics} />
+        </>
+      ) : (
+        <ProGate feature="ADVANCED_ANALYTICS" title="Advanced analytics">
+          Time analysis, GitHub, email, patterns, and longer trends are part of LifeOS Pro.
+        </ProGate>
+      )}
       <div id="momentum">
         <MomentumBlock analytics={analytics} />
       </div>
       <div id="review">
-        <AnalyticsReviews
-          range={rangeId}
-          from={analytics.range.fromParam}
-          to={analytics.range.toParam}
-          configured={configured}
-        />
+        {advanced ? (
+          <AnalyticsReviews
+            range={rangeId}
+            from={analytics.range.fromParam}
+            to={analytics.range.toParam}
+            configured={configured}
+          />
+        ) : (
+          <ProGate feature="AI_WEEKLY_REVIEW" title="Weekly review">
+            AI weekly reviews and daily briefs are included with Pro.
+          </ProGate>
+        )}
       </div>
     </div>
   );
@@ -143,7 +165,7 @@ function OverviewGrid({ analytics }: { analytics: SerializedAnalytics }) {
   );
 }
 
-function HabitsBlock({ analytics }: { analytics: SerializedAnalytics }) {
+function HabitsBlock({ analytics, advanced }: { analytics: SerializedAnalytics; advanced: boolean }) {
   const habits = analytics.habits;
   return (
     <SectionCard title="Habit consistency">
@@ -162,10 +184,12 @@ function HabitsBlock({ analytics }: { analytics: SerializedAnalytics }) {
           compact
         />
       </div>
-      {habits.heatmap.some((day) => day.scheduled > 0) ? (
+      {advanced && habits.heatmap.some((day) => day.scheduled > 0) ? (
         <HabitHeatmap days={habits.heatmap} />
-      ) : (
+      ) : advanced ? (
         <p className="text-sm text-muted-foreground">No scheduled habits in this window yet.</p>
+      ) : (
+        <p className="text-sm text-muted-foreground">The activity heatmap is part of LifeOS Pro.</p>
       )}
     </SectionCard>
   );

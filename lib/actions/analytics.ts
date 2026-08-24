@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth/session";
 import { generateAnalyticsReview } from "@/lib/ai/analytics-review";
 import { userFacingAIError } from "@/lib/ai/errors";
+import { entitlementActionError } from "@/lib/billing/action";
 import type { ActionResult } from "@/types";
 
 export async function generateWeeklyReviewAction(formData: FormData): Promise<ActionResult<{ text: string }>> {
@@ -32,6 +33,6 @@ async function generateReview(
     });
     return { ok: true, data: { text } };
   } catch (error) {
-    return { ok: false, error: userFacingAIError(error) };
+    return entitlementActionError(error) ?? { ok: false, error: userFacingAIError(error) };
   }
 }

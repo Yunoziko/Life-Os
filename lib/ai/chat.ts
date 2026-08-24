@@ -5,6 +5,8 @@ import { buildLifeOSContext, formatNow } from "@/lib/ai/context";
 import { lifeOSSystemPrompt } from "@/lib/ai/prompt";
 import { getUserMemory, formatMemoryForPrompt } from "@/lib/ai/memory";
 import { assertAIRateLimit } from "@/lib/ai/rate-limit";
+import { assertAIUsage } from "@/lib/billing/entitlements";
+import { recordAIUsage } from "@/lib/billing/usage";
 import { buildStructuredAction } from "@/lib/ai/actions";
 import {
   AUTO_WRITE_TOOLS,
@@ -71,6 +73,7 @@ export async function runLifeOSChat(input: {
   if (!isAIConfigured()) throw new AIError("missing_key");
 
   await assertAIRateLimit(input.userId);
+  await assertAIUsage(input.userId, input.timeZone);
   input.onEvent({ type: "status", value: "thinking" });
 
   let conversationId = input.conversationId;
@@ -262,6 +265,8 @@ export async function runLifeOSChat(input: {
     sources: context.sources,
     tools: toolTrace.length ? toolTrace : undefined,
   });
+
+  await recordAIUsage(input.userId, input.timeZone);
 
   input.onEvent({
     type: "done",

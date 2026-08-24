@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { SettingsNav } from "@/components/settings/settings-nav";
 
 export const metadata = { title: "Profile" };
 
@@ -13,6 +14,7 @@ export default async function ProfilePage() {
         title="Profile"
         description="How LifeOS addresses you across the workspace."
       />
+      <SettingsNav current="profile" />
       <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <ProfileForm
           email={user.email}

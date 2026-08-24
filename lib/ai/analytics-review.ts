@@ -10,6 +10,8 @@ import {
   dailyBriefPrompt,
   weeklyReviewPrompt,
 } from "@/lib/analytics/context";
+import { assertAIUsage, assertCanUseFeature } from "@/lib/billing/entitlements";
+import { recordAIUsage } from "@/lib/billing/usage";
 
 export async function generateAnalyticsReview(input: {
   userId: string;
@@ -21,7 +23,9 @@ export async function generateAnalyticsReview(input: {
   if (!isAIConfigured()) {
     throw new AIError("missing_key");
   }
+  await assertCanUseFeature(input.userId, "AI_WEEKLY_REVIEW");
   await assertAIRateLimit(input.userId);
+  await assertAIUsage(input.userId, input.timeZone);
 
   const now = formatNow(input.timeZone);
   const analytics = await getLifeAnalytics(
@@ -90,5 +94,6 @@ Never invent data. Never mention API keys, IDs, or implementation details.`;
 
   const content = response.content.trim();
   if (!content) throw new AIError("malformed");
+  await recordAIUsage(input.userId, input.timeZone);
   return content;
 }

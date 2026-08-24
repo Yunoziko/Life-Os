@@ -13,10 +13,12 @@ export function CompletionChart({
   series,
   timezone,
   defaultWindow,
+  windows = WINDOWS,
 }: {
   series: TaskTrendPoint[];
   timezone: string;
   defaultWindow: 7 | 30 | 90;
+  windows?: readonly (7 | 30 | 90)[];
 }) {
   const [windowDays, setWindowDays] = useState<7 | 30 | 90>(defaultWindow);
   const points = series.slice(-windowDays);
@@ -36,7 +38,7 @@ export function CompletionChart({
       title="Productivity trend"
       action={
         <div className="flex gap-1">
-          {WINDOWS.map((item) => (
+          {windows.map((item) => (
             <Button
               key={item}
               type="button"

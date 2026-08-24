@@ -1,20 +1,25 @@
 "use client";
 
 import { Bell, Command, Menu, Search } from "lucide-react";
+import Link from "next/link";
 import { useWorkspace } from "@/components/workspace-provider";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { BillingPlanId } from "@/lib/billing/config";
 
 export function TopBar({
   name,
   email,
   image,
+  plan = "FREE",
   onOpenSidebar,
 }: {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  plan?: BillingPlanId;
   onOpenSidebar: () => void;
 }) {
   const { setCommandOpen, setSearchOpen } = useWorkspace();
@@ -73,6 +78,12 @@ export function TopBar({
           </p>
         </PopoverContent>
       </Popover>
+
+      {plan === "PRO" ? (
+        <Badge variant="secondary" className="hidden sm:inline-flex" render={<Link href="/settings/billing" />}>
+          Pro
+        </Badge>
+      ) : null}
 
       <UserMenu name={name} email={email} image={image} />
     </header>
