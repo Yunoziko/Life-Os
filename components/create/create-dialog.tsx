@@ -11,6 +11,7 @@ import {
   createNoteAction,
   createProjectAction,
   createTaskAction,
+  createLearningAction,
 } from "@/lib/actions/entities";
 import { useWorkspace } from "@/components/workspace-provider";
 import { TaskFormFields } from "@/components/tasks/task-form-fields";
@@ -18,7 +19,8 @@ import { ProjectFormFields } from "@/components/projects/project-form-fields";
 import { GoalForm, goalValuesToFormData, type GoalFormValues } from "@/components/goals/goal-form";
 import { HabitForm, habitValuesToFormData } from "@/components/habits/habit-form";
 import { EventForm, eventValuesToFormData, type EventFormValues } from "@/components/calendar/event-form";
-import type { CreateHabitInput } from "@/lib/validations/entities";
+import { LearningForm, learningValuesToFormData } from "@/components/learning/learning-form";
+import type { CreateHabitInput, CreateLearningInput } from "@/lib/validations/entities";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +80,11 @@ const copy: Record<CreateEntityType, { title: string; description: string; href:
     description: "A checkpoint on the way to a goal.",
     href: "/goals",
   },
+  learning: {
+    title: "Add learning",
+    description: "A course, book, or resource you want to finish.",
+    href: "/learning",
+  },
 };
 
 function shouldStay(type: CreateEntityType, pathname: string) {
@@ -89,6 +96,7 @@ function shouldStay(type: CreateEntityType, pathname: string) {
   if ((type === "goal" || type === "milestone") && pathname.startsWith("/goals")) return true;
   if (type === "habit" && pathname.startsWith("/habits")) return true;
   if (type === "event" && pathname.startsWith("/calendar")) return true;
+  if (type === "learning" && pathname.startsWith("/learning")) return true;
   return false;
 }
 
@@ -136,6 +144,12 @@ export function CreateDialog() {
     setPending(true);
     const result = await createEventAction(eventValuesToFormData(values));
     await finish("event", result);
+  }
+
+  async function onCreateLearning(values: CreateLearningInput) {
+    setPending(true);
+    const result = await createLearningAction(learningValuesToFormData(values));
+    await finish("learning", result);
   }
 
   async function onSubmit(formData: FormData) {
@@ -189,6 +203,19 @@ export function CreateDialog() {
         submitLabel="Create"
         onCancel={closeCreate}
         onSubmit={onCreateEvent}
+      />
+    ) : createType === "learning" ? (
+      <LearningForm
+        values={{
+          goalId: createDefaults.goalId,
+          projectId: createDefaults.projectId,
+        }}
+        goals={assignable.goals}
+        projects={assignable.projects}
+        pending={pending}
+        submitLabel="Add"
+        onCancel={closeCreate}
+        onSubmit={onCreateLearning}
       />
     ) : createType ? (
       <form action={onSubmit} className="grid gap-4">

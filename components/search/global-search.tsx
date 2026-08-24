@@ -7,6 +7,7 @@ import {
   CheckSquare,
   FolderKanban,
   Goal,
+  BookOpen,
   NotebookPen,
 } from "lucide-react";
 import { searchEverything } from "@/lib/search";
@@ -27,6 +28,7 @@ const icons: Record<SearchResultType, typeof CheckSquare> = {
   project: FolderKanban,
   note: NotebookPen,
   event: CalendarDays,
+  learning: BookOpen,
 };
 
 export function GlobalSearch() {

@@ -14,6 +14,7 @@ import {
   zonedDayRange,
 } from "@/lib/utils/date";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { deriveLearningState, normalizeResourceUrl } from "@/lib/learning/state";
 import { IntegrationError } from "@/lib/integrations/errors";
 import { maybePushLifeOSEvent } from "@/lib/integrations/google/sync";
 import {
@@ -128,6 +129,19 @@ async function findHabit(userId: string, id?: string, name?: string) {
   if (name) {
     return prisma.habit.findFirst({
       where: { userId, archived: false, name: { equals: name, mode: "insensitive" } },
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+  return null;
+}
+
+async function findLearning(userId: string, id?: string, title?: string) {
+  if (id) {
+    return prisma.learningItem.findFirst({ where: { id, userId } });
+  }
+  if (title) {
+    return prisma.learningItem.findFirst({
+      where: { userId, title: { equals: title, mode: "insensitive" } },
       orderBy: { updatedAt: "desc" },
     });
   }
@@ -282,7 +296,7 @@ export async function getWeeklySummary({ userId, timeZone }: ToolContext): Promi
   const weekStart = zonedDayRange(timeZone, new Date(Date.now() - 6 * 86_400_000)).start;
   const habitDay = utcMidnightFromCalendarDate(today.ymd);
 
-  const [completed, stillOpen, overdue, events, habitLogs, habits] = await Promise.all([
+  const [completed, stillOpen, overdue, events, habitLogs, habits, completedLearning] = await Promise.all([
     prisma.task.count({
       where: { userId, status: "DONE", completedAt: { gte: weekStart, lt: today.end } },
     }),
@@ -303,6 +317,13 @@ export async function getWeeklySummary({ userId, timeZone }: ToolContext): Promi
       where: { userId, completed: true, date: { gte: utcMidnightFromCalendarDate(calendarDate(timeZone, weekStart)), lte: habitDay } },
     }),
     prisma.habit.count({ where: { userId, archived: false, paused: false } }),
+    prisma.learningItem.count({
+      where: {
+        userId,
+        status: "COMPLETED",
+        completedAt: { gte: weekStart, lt: today.end },
+      },
+    }),
   ]);
 
   const goals = await prisma.goal.findMany({
@@ -319,6 +340,7 @@ export async function getWeeklySummary({ userId, timeZone }: ToolContext): Promi
       eventsThisWeek: events,
       habitCompletions: habitLogs,
       activeHabits: habits,
+      completedLearning,
       goals: goals.map((goal) => ({
         title: goal.title,
         progress: goal.progress,
@@ -460,6 +482,51 @@ async function queryProjects(ctx: ToolContext, args: unknown): Promise<ToolResul
 
 async function queryHabits(ctx: ToolContext): Promise<ToolResult> {
   return getTodayHabits(ctx);
+}
+
+async function getLearning(ctx: ToolContext, args: unknown): Promise<ToolResult> {
+  const parsed = z
+    .object({
+      query: z.string().trim().max(120).optional(),
+      status: z.enum(["NOT_STARTED", "IN_PROGRESS", "PAUSED", "COMPLETED", "ARCHIVED"]).optional(),
+    })
+    .safeParse(args ?? {});
+  if (!parsed.success) return fail("Invalid learning filters.");
+
+  const items = await prisma.learningItem.findMany({
+    where: {
+      userId: ctx.userId,
+      ...(parsed.data.status ? { status: parsed.data.status } : { status: { not: "ARCHIVED" } }),
+      ...(parsed.data.query
+        ? {
+            OR: [
+              { title: { contains: parsed.data.query, mode: "insensitive" as const } },
+              { description: { contains: parsed.data.query, mode: "insensitive" as const } },
+              { provider: { contains: parsed.data.query, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    },
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      status: true,
+      progress: true,
+      provider: true,
+      targetDate: true,
+    },
+    take: 20,
+    orderBy: [{ updatedAt: "desc" }],
+  });
+
+  return ok(
+    items.map((item) => ({
+      ...item,
+      targetDate: item.targetDate ? calendarDate(ctx.timeZone, item.targetDate) : null,
+    })),
+    `${items.length} learning item${items.length === 1 ? "" : "s"}`
+  );
 }
 
 export async function createTask(ctx: ToolContext, args: unknown): Promise<ToolResult> {
@@ -742,6 +809,94 @@ export async function completeHabit(ctx: ToolContext, args: unknown): Promise<To
   return ok({ id: habit.id, completed: true }, `Completed habit: ${habit.name}`);
 }
 
+export async function createLearningItem(ctx: ToolContext, args: unknown): Promise<ToolResult> {
+  const parsed = z
+    .object({
+      title: z.string().trim().min(1).max(160),
+      description: z.string().trim().max(2000).optional(),
+      type: z.enum(["COURSE", "BOOK", "ARTICLE", "VIDEO", "PODCAST", "OTHER"]).optional(),
+      url: z.string().trim().max(500).optional(),
+      provider: z.string().trim().max(80).optional(),
+      progress: z.coerce.number().int().min(0).max(100).optional(),
+      targetDate: dateString,
+      goalId: optionalId,
+      projectId: optionalId,
+    })
+    .safeParse(args);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid learning item.");
+
+  if (parsed.data.projectId) {
+    const project = await prisma.project.findFirst({
+      where: { id: parsed.data.projectId, userId: ctx.userId },
+      select: { id: true },
+    });
+    if (!project) return fail("That project isn’t in your workspace.");
+  }
+  if (parsed.data.goalId) {
+    const goal = await prisma.goal.findFirst({
+      where: { id: parsed.data.goalId, userId: ctx.userId },
+      select: { id: true },
+    });
+    if (!goal) return fail("That goal isn’t in your workspace.");
+  }
+
+  const state = deriveLearningState({
+    progress: parsed.data.progress,
+  });
+
+  const item = await prisma.learningItem.create({
+    data: {
+      userId: ctx.userId,
+      title: parsed.data.title,
+      description: parsed.data.description || null,
+      type: parsed.data.type ?? "COURSE",
+      status: state.status,
+      url: normalizeResourceUrl(parsed.data.url),
+      provider: parsed.data.provider ?? null,
+      progress: state.progress,
+      targetDate: parsed.data.targetDate ? new Date(`${parsed.data.targetDate}T12:00:00.000Z`) : null,
+      completedAt: state.completedAt,
+      goalId: parsed.data.goalId ?? null,
+      projectId: parsed.data.projectId ?? null,
+    },
+    select: { id: true, title: true, progress: true, status: true },
+  });
+  revalidateWorkspace([`/learning/${item.id}`]);
+  return ok(item, `Added learning: ${item.title}`);
+}
+
+export async function updateLearningProgress(ctx: ToolContext, args: unknown): Promise<ToolResult> {
+  const parsed = z
+    .object({
+      id: optionalId,
+      title: optionalTitle,
+      progress: z.coerce.number().int().min(0).max(100),
+    })
+    .safeParse(args ?? {});
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Choose a learning item and progress.");
+
+  const existing = await findLearning(ctx.userId, parsed.data.id, parsed.data.title);
+  if (!existing) return fail("Learning item not found.");
+
+  const state = deriveLearningState({
+    progress: parsed.data.progress,
+    previousStatus: existing.status,
+    previousProgress: existing.progress,
+  });
+
+  const item = await prisma.learningItem.update({
+    where: { id: existing.id },
+    data: {
+      progress: state.progress,
+      status: state.status,
+      completedAt: state.status === "COMPLETED" ? new Date() : null,
+    },
+    select: { id: true, title: true, progress: true, status: true },
+  });
+  revalidateWorkspace([`/learning/${item.id}`]);
+  return ok(item, `${item.title}: ${item.progress}%`);
+}
+
 export async function deleteTask(ctx: ToolContext, args: unknown): Promise<ToolResult> {
   const parsed = z.object({ id: optionalId, title: optionalTitle }).safeParse(args ?? {});
   if (!parsed.success) return fail("Choose a task to delete.");
@@ -793,6 +948,7 @@ const handlers: Record<string, (ctx: ToolContext, args: unknown) => Promise<Tool
   get_projects: (ctx, args) => queryProjects(ctx, args),
   get_today_habits: (ctx) => getTodayHabits(ctx),
   get_habits: (ctx) => queryHabits(ctx),
+  get_learning: (ctx, args) => getLearning(ctx, args),
   search_notes: (ctx, args) => searchNotes(ctx, args),
   get_weekly_summary: (ctx) => getWeeklySummary(ctx),
   search_emails: (ctx, args) => searchEmailsTool(ctx, args),
@@ -809,6 +965,8 @@ const handlers: Record<string, (ctx: ToolContext, args: unknown) => Promise<Tool
   create_calendar_event: (ctx, args) => createCalendarEvent(ctx, args),
   create_note: (ctx, args) => createNote(ctx, args),
   complete_habit: (ctx, args) => completeHabit(ctx, args),
+  create_learning_item: (ctx, args) => createLearningItem(ctx, args),
+  update_learning_progress: (ctx, args) => updateLearningProgress(ctx, args),
   delete_task: (ctx, args) => deleteTask(ctx, args),
   delete_goal: (ctx, args) => deleteGoal(ctx, args),
   delete_project: (ctx, args) => deleteProject(ctx, args),

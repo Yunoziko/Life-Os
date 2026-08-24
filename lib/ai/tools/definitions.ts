@@ -89,6 +89,21 @@ export const lifeOSTools: AIToolDefinition[] = [
     parameters: { type: "object", additionalProperties: false, properties: {} },
   },
   {
+    name: "get_learning",
+    description: "Find courses, books, and other learning items by status or search text.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        query: { type: "string" },
+        status: {
+          type: "string",
+          enum: ["NOT_STARTED", "IN_PROGRESS", "PAUSED", "COMPLETED", "ARCHIVED"],
+        },
+      },
+    },
+  },
+  {
     name: "search_notes",
     description: "Search notes by title or preview. Returns titles and short previews only.",
     parameters: {
@@ -281,6 +296,42 @@ export const lifeOSTools: AIToolDefinition[] = [
     },
   },
   {
+    name: "create_learning_item",
+    description: "Add one course, book, or resource to Learning. LifeOS will confirm before saving.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      required: ["title"],
+      properties: {
+        title: { type: "string" },
+        description: { type: "string" },
+        type: {
+          type: "string",
+          enum: ["COURSE", "BOOK", "ARTICLE", "VIDEO", "PODCAST", "OTHER"],
+        },
+        url: { type: "string" },
+        provider: { type: "string" },
+        progress: { type: "integer", minimum: 0, maximum: 100 },
+        targetDate: { type: "string", description: "YYYY-MM-DD" },
+        goalId: { type: "string" },
+        projectId: { type: "string" },
+      },
+    },
+  },
+  {
+    name: "update_learning_progress",
+    description: "Set progress (0–100) on one learning item. 100 marks it complete.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        ...idOrTitle.properties,
+        progress: { type: "integer", minimum: 0, maximum: 100 },
+      },
+      required: ["progress"],
+    },
+  },
+  {
     name: "delete_task",
     description: "Propose deleting a task. Always requires confirmation.",
     parameters: { type: "object", additionalProperties: false, properties: idOrTitle.properties },
@@ -320,6 +371,7 @@ export const READ_TOOLS = new Set([
   "get_projects",
   "get_today_habits",
   "get_habits",
+  "get_learning",
   "search_notes",
   "get_weekly_summary",
   "search_emails",
@@ -329,7 +381,12 @@ export const READ_TOOLS = new Set([
   "get_pull_requests",
 ]);
 
-export const AUTO_WRITE_TOOLS = new Set(["complete_task", "complete_habit", "create_note"]);
+export const AUTO_WRITE_TOOLS = new Set([
+  "complete_task",
+  "complete_habit",
+  "create_note",
+  "update_learning_progress",
+]);
 
 export const CONFIRM_WRITE_TOOLS = new Set([
   "create_task",
@@ -338,6 +395,7 @@ export const CONFIRM_WRITE_TOOLS = new Set([
   "update_goal",
   "create_project",
   "create_calendar_event",
+  "create_learning_item",
   "delete_task",
   "delete_goal",
   "delete_project",
@@ -354,6 +412,8 @@ export const TOOL_ACTION_TYPE: Record<string, AIActionType> = {
   create_calendar_event: "CREATE_CALENDAR_EVENT",
   create_note: "CREATE_NOTE",
   complete_habit: "COMPLETE_HABIT",
+  create_learning_item: "CREATE_LEARNING",
+  update_learning_progress: "UPDATE_LEARNING_PROGRESS",
   delete_task: "DELETE_TASK",
   delete_goal: "DELETE_GOAL",
   delete_project: "DELETE_PROJECT",

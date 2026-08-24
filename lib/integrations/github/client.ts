@@ -224,3 +224,37 @@ export async function getGitHubRepoSnapshot(userId: string, repo: string) {
     openPulls: pulls,
   };
 }
+
+export type GitHubActivityEvent = {
+  type: string;
+  repo: string;
+  createdAt: string;
+  commits: number;
+};
+
+export async function getGitHubActivityEvents(userId: string): Promise<GitHubActivityEvent[] | null> {
+  if (!(await isIntegrationConnected(userId, "GITHUB"))) return null;
+
+  return cached(`github:events:${userId}`, 60, async () => {
+    const user = (await githubFetch(userId, "/user")) as { login?: string };
+    if (!user.login) return [];
+    const events = (await githubFetch(userId, `/users/${encodeURIComponent(user.login)}/events?per_page=50`)) as {
+      type?: string;
+      created_at?: string;
+      repo?: { name?: string };
+      payload?: { size?: number; commits?: unknown[] };
+    }[];
+    return events
+      .filter((event) => event.created_at)
+      .map((event) => ({
+        type: event.type ?? "Event",
+        repo: event.repo?.name ?? "",
+        createdAt: event.created_at ?? "",
+        commits: Array.isArray(event.payload?.commits)
+          ? event.payload.commits.length
+          : typeof event.payload?.size === "number"
+            ? event.payload.size
+            : 0,
+      }));
+  });
+}

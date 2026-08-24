@@ -52,6 +52,7 @@ export function ProjectWorkspace({
   tasks,
   notes,
   github,
+  learningItems = [],
   projects,
   goals,
   timezone,
@@ -65,6 +66,7 @@ export function ProjectWorkspace({
     openIssues: { number: number; title: string; state: string; url: string; updatedAt: string }[];
     openPulls: { number: number; title: string; state: string; url: string; updatedAt: string }[];
   } | null;
+  learningItems?: { id: string; title: string; progress: number; status: string }[];
   projects: AssignableProject[];
   goals: AssignableGoal[];
   timezone: string;
@@ -186,6 +188,21 @@ export function ProjectWorkspace({
                 <dd>{project.githubRepo ?? "None linked"}</dd>
               </div>
             </dl>
+            {learningItems.length > 0 ? (
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">Linked learning</p>
+                <ul className="space-y-1">
+                  {learningItems.map((item) => (
+                    <li key={item.id}>
+                      <Link href={`/learning/${item.id}`} className="text-sm hover:underline">
+                        {item.title}
+                        <span className="ml-2 tabular-nums text-muted-foreground">{item.progress}%</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
           {github ? (
             <div className="mt-4">

@@ -9,9 +9,12 @@ import { TodayTasks } from "@/components/dashboard/today-tasks";
 import { FocusCard } from "@/components/dashboard/focus-card";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { ActiveGoals } from "@/components/dashboard/active-goals";
+import { CurrentlyLearning } from "@/components/dashboard/currently-learning";
 import { HabitOverview } from "@/components/dashboard/habit-overview";
 import { AiInsight } from "@/components/dashboard/ai-insight";
+import { MomentumCard } from "@/components/dashboard/momentum-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { getMomentumSnapshot } from "@/lib/db/analytics";
 
 export const metadata = {
   title: "Overview",
@@ -20,7 +23,10 @@ export const metadata = {
 export default async function DashboardPage() {
   const user = await requireUser();
   const timezone = user.profile?.timezone ?? "UTC";
-  const data = await getDashboardData(user.id, timezone);
+  const [data, momentum] = await Promise.all([
+    getDashboardData(user.id, timezone),
+    getMomentumSnapshot(user.id, timezone, user.profile?.weekStartsOn ?? 1),
+  ]);
   const name = firstName(user.profile?.displayName ?? user.name);
   const hour = Number(
     new Intl.DateTimeFormat("en-US", {
@@ -65,13 +71,17 @@ export default async function DashboardPage() {
         <FadeIn delay={0.1} className="lg:col-start-2 lg:row-start-1">
           <UpcomingEvents events={data.upcomingEvents} timezone={timezone} />
         </FadeIn>
-        <FadeIn delay={0.16} className="lg:col-start-1 lg:row-start-4">
+        <FadeIn delay={0.16} className="space-y-4 lg:col-start-1 lg:row-start-4">
           <ActiveGoals goals={data.activeGoals} timezone={timezone} />
+          <CurrentlyLearning items={data.currentlyLearning} />
         </FadeIn>
         <FadeIn delay={0.14} className="lg:col-start-2 lg:row-start-2">
           <HabitOverview habits={data.habits} />
         </FadeIn>
-        <FadeIn delay={0.18} className="lg:col-start-2 lg:row-start-3">
+        <FadeIn delay={0.18} className="space-y-4 lg:col-start-2 lg:row-start-3">
+          {momentum.hasAnyData ? (
+            <MomentumCard score={momentum.score} delta={momentum.delta} insight={momentum.insight} />
+          ) : null}
           <AiInsight insight={insight} />
         </FadeIn>
         <FadeIn delay={0.2} className="lg:col-start-2 lg:row-start-4">

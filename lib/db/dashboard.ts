@@ -49,6 +49,13 @@ export type DashboardFocus = {
   taskTitle: string | null;
 };
 
+export type DashboardLearning = {
+  id: string;
+  title: string;
+  progress: number;
+  type: string;
+};
+
 export type DashboardData = {
   hasAnyData: boolean;
   completedToday: number;
@@ -59,6 +66,7 @@ export type DashboardData = {
   todayTasks: DashboardTask[];
   focus: DashboardFocus | null;
   activeGoals: DashboardGoal[];
+  currentlyLearning: DashboardLearning[];
   upcomingEvents: DashboardEvent[];
   habits: DashboardHabit[];
 };
@@ -83,6 +91,7 @@ export async function getDashboardData(
     counts,
     activeProject,
     upcomingTasks,
+    currentlyLearning,
   ] = await Promise.all([
     prisma.task.findMany({
       where: {
@@ -177,6 +186,7 @@ export async function getDashboardData(
       prisma.project.count({ where: { userId } }),
       prisma.habit.count({ where: { userId } }),
       prisma.calendarEvent.count({ where: { userId } }),
+      prisma.learningItem.count({ where: { userId } }),
     ]),
     prisma.project.findFirst({
       where: { userId, status: "ACTIVE" },
@@ -197,6 +207,12 @@ export async function getDashboardData(
       select: { id: true, title: true, dueAt: true },
       orderBy: { dueAt: "asc" },
       take: 8,
+    }),
+    prisma.learningItem.findMany({
+      where: { userId, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
+      select: { id: true, title: true, progress: true, type: true },
+      orderBy: [{ progress: "desc" }, { updatedAt: "desc" }],
+      take: 3,
     }),
   ]);
 
@@ -267,6 +283,7 @@ export async function getDashboardData(
       progress: goal.progress,
       targetDate: goal.targetDate,
     })),
+    currentlyLearning,
     upcomingEvents: [
       ...upcomingEvents.map((event) => ({
         id: event.id,
@@ -370,6 +387,9 @@ export function dashboardStatusLine(data: DashboardData) {
   if (data.remainingToday > 0) return "Let’s make today count.";
   if (data.habits.some((habit) => !habit.completedToday)) {
     return "A few habits are still open.";
+  }
+  if (data.currentlyLearning.length > 0) {
+    return "Keep the learning moving.";
   }
   if (data.completedToday > 0 || data.habits.some((habit) => habit.completedToday)) {
     return "Today is in good shape.";

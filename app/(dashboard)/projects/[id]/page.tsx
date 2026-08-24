@@ -51,6 +51,12 @@ export default async function ProjectDetailPage({
         ...note,
         updatedAt: note.updatedAt.toISOString(),
       }))}
+      learningItems={project.learningItems.map((item) => ({
+        id: item.id,
+        title: item.title,
+        progress: item.progress,
+        status: item.status,
+      }))}
       github={
         github
           ? {

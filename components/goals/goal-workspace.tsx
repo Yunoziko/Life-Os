@@ -66,6 +66,13 @@ type RelatedHabit = {
   name: string;
 };
 
+type RelatedLearning = {
+  id: string;
+  title: string;
+  progress: number;
+  status: string;
+};
+
 export function GoalWorkspace({
   goal,
   projects,
@@ -87,6 +94,7 @@ export function GoalWorkspace({
     tasks: RelatedTask[];
     projects: RelatedProject[];
     habits: RelatedHabit[];
+    learningItems: RelatedLearning[];
     notes: RelatedNoteCard[];
   };
   projects: AssignableProject[];
@@ -198,6 +206,21 @@ export function GoalWorkspace({
                     <li key={habit.id}>
                       <Link href={`/habits/${habit.id}`} className="text-sm hover:underline">
                         {habit.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {goal.learningItems.length > 0 ? (
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">Linked learning</p>
+                <ul className="space-y-1">
+                  {goal.learningItems.map((item) => (
+                    <li key={item.id}>
+                      <Link href={`/learning/${item.id}`} className="text-sm hover:underline">
+                        {item.title}
+                        <span className="ml-2 tabular-nums text-muted-foreground">{item.progress}%</span>
                       </Link>
                     </li>
                   ))}

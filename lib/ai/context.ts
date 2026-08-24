@@ -56,6 +56,7 @@ export async function buildLifeOSContext(
       habits,
       recentNotes,
       completedWeek,
+      activeLearning,
       integrations,
     ] = await Promise.all([
       prisma.task.findMany({
@@ -161,6 +162,20 @@ export async function buildLifeOSContext(
         orderBy: { completedAt: "desc" },
         take: 12,
       }),
+      prisma.learningItem.findMany({
+        where: { userId, status: { in: ["IN_PROGRESS", "NOT_STARTED", "PAUSED"] } },
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          status: true,
+          progress: true,
+          provider: true,
+          targetDate: true,
+        },
+        orderBy: [{ progress: "desc" }, { updatedAt: "desc" }],
+        take: 12,
+      }),
       getIntegrationConnectionMap(userId),
     ]);
 
@@ -225,6 +240,15 @@ export async function buildLifeOSContext(
         title: task.title,
         completed: isoDate(task.completedAt, timeZone),
       })),
+      currentlyLearning: activeLearning.map((item) => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        status: item.status,
+        progress: item.progress,
+        provider: item.provider,
+        targetDate: isoDate(item.targetDate, timeZone),
+      })),
     };
 
     const considered: Record<ContextSource, number> = {
@@ -234,6 +258,7 @@ export async function buildLifeOSContext(
       calendar: snapshot.upcomingEvents.length,
       habits: snapshot.today.habits.length,
       notes: snapshot.recentNotes.length,
+      learning: snapshot.currentlyLearning.length,
       gmail: integrations.gmail.connected ? 1 : 0,
       github: integrations.github.connected ? 1 : 0,
     };

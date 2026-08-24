@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckSquare, FolderKanban, Goal, NotebookPen, Repeat } from "lucide-react";
+import { BookOpen, CheckSquare, FolderKanban, Goal, NotebookPen, Repeat } from "lucide-react";
 import { useWorkspace } from "@/components/workspace-provider";
 import { SectionCard } from "@/components/dashboard/section-card";
 import type { CreateEntityType } from "@/types";
@@ -11,6 +11,7 @@ const actions: { type: CreateEntityType; label: string; icon: typeof CheckSquare
   { type: "note", label: "New Note", icon: NotebookPen },
   { type: "project", label: "New Project", icon: FolderKanban },
   { type: "habit", label: "Add Habit", icon: Repeat },
+  { type: "learning", label: "Add Learning", icon: BookOpen },
 ];
 
 export function QuickActions() {

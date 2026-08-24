@@ -1,17 +1,24 @@
-import { BookOpen } from "lucide-react";
-import { ModulePage } from "@/components/shared/module-page";
+import { requireUser } from "@/lib/auth/session";
+import { getLearningOverview } from "@/lib/db/learning";
+import { PageHeader } from "@/components/layout/page-header";
+import { CreateTrigger } from "@/components/dashboard/create-trigger";
+import { LearningList } from "@/components/learning/learning-list";
 
 export const metadata = { title: "Learning" };
 
-export default function LearningPage() {
+export default async function LearningPage() {
+  const user = await requireUser();
+  const timezone = user.profile?.timezone ?? "UTC";
+  const items = await getLearningOverview(user.id);
+
   return (
-    <ModulePage
-      title="Learning"
-      description="Courses, notes, and progress — coming after the foundation."
-      icon={BookOpen}
-      emptyTitle="Learning isn’t open yet"
-      emptyDescription="The module is in the shell so it has a home. Curriculum and tracking will arrive later."
-      isEmpty
-    />
+    <div>
+      <PageHeader
+        title="Learning"
+        description="Courses, books, and resources you’re actually working through."
+        action={<CreateTrigger type="learning">+ Add</CreateTrigger>}
+      />
+      <LearningList items={items} timezone={timezone} />
+    </div>
   );
 }

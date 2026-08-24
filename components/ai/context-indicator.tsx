@@ -10,6 +10,7 @@ const LABELS: Record<ContextSource, string> = {
   calendar: "Calendar",
   habits: "Habits",
   notes: "Notes",
+  learning: "Learning",
   gmail: "Gmail",
   github: "GitHub",
 };

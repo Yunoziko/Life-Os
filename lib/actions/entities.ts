@@ -41,6 +41,12 @@ import {
   toggleHabitAction as persistHabitToggle,
   deleteHabitAction as persistHabitDelete,
 } from "@/lib/actions/habits";
+import {
+  createLearningAction as persistLearning,
+  updateLearningAction as persistLearningUpdate,
+  updateLearningProgressAction as persistLearningProgress,
+  deleteLearningAction as persistLearningDelete,
+} from "@/lib/actions/learning";
 import type { ActionResult } from "@/types";
 
 export async function createTaskAction(formData: FormData) {
@@ -109,6 +115,22 @@ export async function toggleHabitAction(habitId: string) {
 
 export async function deleteHabitAction(habitId: string) {
   return persistHabitDelete(habitId);
+}
+
+export async function createLearningAction(formData: FormData) {
+  return persistLearning(formData);
+}
+
+export async function updateLearningAction(formData: FormData) {
+  return persistLearningUpdate(formData);
+}
+
+export async function updateLearningProgressAction(formData: FormData) {
+  return persistLearningProgress(formData);
+}
+
+export async function deleteLearningAction(id: string) {
+  return persistLearningDelete(id);
 }
 
 export async function createNoteAction(formData: FormData) {

@@ -1,5 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BarChart3,
+  BookOpen,
   CalendarDays,
   CheckSquare,
   Flag,
@@ -56,12 +58,28 @@ export const appCommands: AppCommand[] = [
     action: { kind: "navigate", href: "/ai?prompt=Review%20my%20goals" },
   },
   {
-    id: "summarize-my-week",
-    label: "Summarize my week",
-    keywords: ["ai", "review", "week"],
+    id: "weekly-review",
+    label: "Weekly Review",
+    keywords: ["ai", "analytics", "week", "summary"],
+    group: "Ask",
+    icon: BarChart3,
+    action: { kind: "navigate", href: "/analytics?range=this-week#review" },
+  },
+  {
+    id: "daily-brief",
+    label: "Daily Brief",
+    keywords: ["ai", "today", "analytics", "brief"],
     group: "Ask",
     icon: Sparkles,
-    action: { kind: "navigate", href: "/ai?prompt=Summarize%20my%20week" },
+    action: { kind: "navigate", href: "/analytics?range=this-week#review" },
+  },
+  {
+    id: "view-momentum",
+    label: "View Momentum",
+    keywords: ["score", "analytics", "pulse"],
+    group: "Navigate",
+    icon: BarChart3,
+    action: { kind: "navigate", href: "/analytics#momentum" },
   },
   {
     id: "open-ai",
@@ -131,6 +149,14 @@ export const appCommands: AppCommand[] = [
     action: { kind: "create", type: "event" },
   },
   {
+    id: "create-learning",
+    label: "Add learning",
+    keywords: ["course", "book", "study", "new"],
+    group: "Create",
+    icon: BookOpen,
+    action: { kind: "create", type: "learning" },
+  },
+  {
     id: "search-everything",
     label: "Search everything",
     keywords: ["find", "lookup", "query"],
@@ -164,6 +190,14 @@ export const appCommands: AppCommand[] = [
     action: { kind: "navigate", href: "/projects" },
   },
   {
+    id: "search-learning",
+    label: "Search learning",
+    keywords: ["find", "course", "book"],
+    group: "Search",
+    icon: BookOpen,
+    action: { kind: "navigate", href: "/learning" },
+  },
+  {
     id: "go-tasks",
     label: "Go to Tasks",
     keywords: ["open", "todo", "list"],
@@ -194,6 +228,22 @@ export const appCommands: AppCommand[] = [
     group: "Navigate",
     icon: Repeat,
     action: { kind: "navigate", href: "/habits" },
+  },
+  {
+    id: "go-learning",
+    label: "Go to Learning",
+    keywords: ["open", "courses", "study"],
+    group: "Navigate",
+    icon: BookOpen,
+    action: { kind: "navigate", href: "/learning" },
+  },
+  {
+    id: "go-analytics",
+    label: "Open Analytics",
+    keywords: ["open", "insights", "momentum", "patterns"],
+    group: "Navigate",
+    icon: BarChart3,
+    action: { kind: "navigate", href: "/analytics" },
   },
   {
     id: "go-notes",

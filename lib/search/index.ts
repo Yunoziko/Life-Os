@@ -17,7 +17,7 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
   const q = parsed.data.query;
   const timezone = user.profile?.timezone ?? "UTC";
 
-  const [tasks, goals, projects, notes, events] = await Promise.all([
+  const [tasks, goals, projects, notes, events, learning] = await Promise.all([
     prisma.task.findMany({
       where: {
         userId: user.id,
@@ -75,6 +75,18 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
       take: 5,
       orderBy: { startAt: "asc" },
     }),
+    prisma.learningItem.findMany({
+      where: {
+        userId: user.id,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { provider: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   return [
@@ -112,6 +124,13 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
       title: event.title,
       subtitle: `EVENT · ${formatShortDate(event.startAt, timezone)}`,
       href: `/calendar?date=${event.startAt.toISOString().slice(0, 10)}&event=${event.id}&view=day`,
+    })),
+    ...learning.map((item) => ({
+      id: item.id,
+      type: "learning" as const,
+      title: item.title,
+      subtitle: item.provider ? `LEARNING · ${item.provider}` : "LEARNING",
+      href: `/learning/${item.id}`,
     })),
   ];
 }

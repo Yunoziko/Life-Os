@@ -83,6 +83,14 @@ export function deriveDashboardInsight(data: DashboardData): DashboardInsight {
     };
   }
 
+  const learning = data.currentlyLearning[0];
+  if (learning && learning.progress < 100) {
+    return {
+      source: "derived",
+      body: `“${learning.title}” is at ${learning.progress}%. A short session keeps it moving.`,
+    };
+  }
+
   if (data.remainingToday === 0 && data.completedToday > 0) {
     return {
       source: "derived",

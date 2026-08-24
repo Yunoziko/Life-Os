@@ -58,6 +58,12 @@ export async function getGoalWorkspace(userId: string, id: string) {
         select: { id: true, name: true },
         take: 8,
       },
+      learningItems: {
+        where: { status: { not: "ARCHIVED" } },
+        select: { id: true, title: true, progress: true, status: true },
+        orderBy: { updatedAt: "desc" },
+        take: 8,
+      },
       notes: {
         where: { archived: false },
         select: { id: true, title: true, preview: true, updatedAt: true, pinned: true },

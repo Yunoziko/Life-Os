@@ -2,7 +2,7 @@ export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; error: string };
 
-export type SearchResultType = "task" | "goal" | "project" | "note" | "event";
+export type SearchResultType = "task" | "goal" | "project" | "note" | "event" | "learning";
 
 export type SearchResult = {
   id: string;
@@ -12,7 +12,7 @@ export type SearchResult = {
   href: string;
 };
 
-export type CreateEntityType = "task" | "note" | "goal" | "project" | "habit" | "event" | "milestone";
+export type CreateEntityType = "task" | "note" | "goal" | "project" | "habit" | "event" | "milestone" | "learning";
 
 export type DashboardInsight = {
   body: string;

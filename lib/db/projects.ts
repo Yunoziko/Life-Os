@@ -61,6 +61,12 @@ export async function getProjectWorkspace(userId: string, id: string) {
         orderBy: [{ pinned: "desc" }, { updatedAt: "desc" }],
         take: 8,
       },
+      learningItems: {
+        where: { status: { not: "ARCHIVED" } },
+        select: { id: true, title: true, progress: true, status: true },
+        orderBy: { updatedAt: "desc" },
+        take: 8,
+      },
     },
   });
 

@@ -48,6 +48,8 @@ export function describeAction(tool: string, payload: AIActionPayload) {
     create_calendar_event: "Schedule event",
     create_note: "Create note",
     complete_habit: "Complete habit",
+    create_learning_item: "Add learning",
+    update_learning_progress: "Update learning progress",
     delete_task: "Delete task",
     delete_goal: "Delete goal",
     delete_project: "Delete project",

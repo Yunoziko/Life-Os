@@ -131,6 +131,28 @@ export const searchSchema = z.object({
   query: z.string().trim().min(1).max(120),
 });
 
+export const createLearningSchema = z.object({
+  title: z.string().trim().min(1, "Give this a title.").max(160),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  type: z.enum(["COURSE", "BOOK", "ARTICLE", "VIDEO", "PODCAST", "OTHER"]).optional(),
+  status: z.enum(["NOT_STARTED", "IN_PROGRESS", "PAUSED", "COMPLETED", "ARCHIVED"]).optional(),
+  url: z.string().trim().max(500).optional().or(z.literal("")),
+  provider: emptyToUndefined,
+  progress: z.coerce.number().int().min(0).max(100).optional(),
+  targetDate: z.string().optional().or(z.literal("")),
+  projectId: emptyToUndefined,
+  goalId: emptyToUndefined,
+});
+
+export const updateLearningSchema = createLearningSchema.extend({
+  id: z.string().uuid(),
+});
+
+export const updateLearningProgressSchema = z.object({
+  id: z.string().uuid(),
+  progress: z.coerce.number().int().min(0, "Progress starts at 0.").max(100, "Progress cannot exceed 100."),
+});
+
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
 export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
@@ -144,3 +166,5 @@ export type CreateHabitInput = z.infer<typeof createHabitSchema>;
 export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;
 export type CreateMilestoneInput = z.infer<typeof createMilestoneSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;
+export type CreateLearningInput = z.infer<typeof createLearningSchema>;
+export type UpdateLearningInput = z.infer<typeof updateLearningSchema>;

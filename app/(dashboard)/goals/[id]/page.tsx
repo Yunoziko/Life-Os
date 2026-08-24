@@ -60,6 +60,12 @@ export default async function GoalDetailPage({
           id: habit.id,
           name: habit.name,
         })),
+        learningItems: goal.learningItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          progress: item.progress,
+          status: item.status,
+        })),
         notes: goal.notes.map((note) => ({
           ...note,
           updatedAt: note.updatedAt.toISOString(),

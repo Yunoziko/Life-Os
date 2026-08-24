@@ -7,6 +7,7 @@ export type ContextSource =
   | "calendar"
   | "habits"
   | "notes"
+  | "learning"
   | "gmail"
   | "github";
 
@@ -20,6 +21,8 @@ export type AIActionType =
   | "CREATE_CALENDAR_EVENT"
   | "CREATE_NOTE"
   | "COMPLETE_HABIT"
+  | "CREATE_LEARNING"
+  | "UPDATE_LEARNING_PROGRESS"
   | "DELETE_TASK"
   | "DELETE_GOAL"
   | "DELETE_PROJECT"
@@ -64,7 +67,7 @@ export const SUGGESTED_PROMPTS = [
   "Plan my day",
   "What should I focus on?",
   "Review my goals",
-  "What's falling behind?",
+  "What am I learning?",
   "Summarize my week",
 ] as const;
 

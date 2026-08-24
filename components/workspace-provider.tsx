@@ -83,6 +83,10 @@ export function WorkspaceProvider({
         openCreate("event");
         return;
       }
+      if (pathname.startsWith("/learning")) {
+        openCreate("learning");
+        return;
+      }
       openCreate("task");
     };
 
