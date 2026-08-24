@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { fireWorkspaceEvent } from "@/lib/automations/events";
 import {
   createEventAction as persistEvent,
   updateEventAction as persistEventUpdate,
@@ -176,6 +177,14 @@ export async function completeTaskAction(taskId: string): Promise<ActionResult<{
       task.projectId ? `/projects/${task.projectId}` : "",
       task.goalId ? `/goals/${task.goalId}` : "",
     ].filter(Boolean));
+    if (done) {
+      fireWorkspaceEvent({
+        userId: user.id,
+        timeZone: user.profile?.timezone ?? "UTC",
+        type: "TASK_COMPLETED",
+        entityId: task.id,
+      });
+    }
     return { ok: true, data: { done } };
   } catch {
     return { ok: false, error: "Could not update the task. Try again." };

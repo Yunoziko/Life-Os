@@ -37,7 +37,7 @@ export async function getUserPlan(userId: string): Promise<BillingPlanId> {
 export async function canUseFeature(userId: string, feature: FeatureKey) {
   const plan = await getUserPlan(userId);
   if (!planHasFeature(plan, feature)) return false;
-  if (feature === "ADVANCED_ANALYTICS" || feature === "AI_WEEKLY_REVIEW") return true;
+  if (feature === "ADVANCED_ANALYTICS" || feature === "AI_WEEKLY_REVIEW" || feature === "AUTOMATION") return true;
   const check = await checkUsageLimit(userId, feature);
   return check.allowed;
 }
@@ -45,7 +45,7 @@ export async function canUseFeature(userId: string, feature: FeatureKey) {
 export async function checkUsageLimit(userId: string, feature: FeatureKey) {
   const plan = await getUserPlan(userId);
   const usage = await getUsage(userId);
-  if (feature === "ADVANCED_ANALYTICS" || feature === "AI_WEEKLY_REVIEW") {
+  if (feature === "ADVANCED_ANALYTICS" || feature === "AI_WEEKLY_REVIEW" || feature === "AUTOMATION") {
     const allowed = planHasFeature(plan, feature);
     return { allowed, used: allowed ? 1 : 0, limit: allowed ? null : 0, plan };
   }

@@ -17,6 +17,7 @@ import {
 import { executeLifeOSTool, isKnownTool } from "@/lib/ai/tools/execute";
 import type { AIChatMessage, AIChatResponse } from "@/lib/ai/provider";
 import type { ConversationMessage, StructuredAction, ChatStreamEvent } from "@/lib/ai/types";
+import { maybeRunAgentFromChat } from "@/lib/agents/chat-bridge";
 import {
   appendMessage,
   conversationTitleFrom,
@@ -70,6 +71,16 @@ export async function runLifeOSChat(input: {
   const text = input.message.trim();
   if (!text) throw new AIError("invalid_args", "Write a message first.");
   if (text.length > 4000) throw new AIError("invalid_args", "That message is too long.");
+
+  const handled = await maybeRunAgentFromChat({
+    userId: input.userId,
+    timeZone: input.timeZone,
+    conversationId: input.conversationId,
+    message: text,
+    onEvent: input.onEvent,
+  });
+  if (handled) return;
+
   if (!isAIConfigured()) throw new AIError("missing_key");
 
   await assertAIRateLimit(input.userId);

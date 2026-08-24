@@ -118,6 +118,39 @@ enum AIMessageRole {
   SYSTEM
 }
 
+enum AgentStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum AgentRunStatus {
+  PLANNING
+  EXECUTING
+  WAITING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AutomationTriggerType {
+  MANUAL
+  SCHEDULE
+  EVENT
+}
+
+enum AutomationRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  AWAITING_CONFIRMATION
+}
+
+enum NotificationChannel {
+  IN_APP
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String?
@@ -146,6 +179,11 @@ model User {
   externalMaps   ExternalItemMapping[]
   subscriptions  Subscription[]
   aiUsage        AIUsage[]
+  agents         Agent[]
+  agentRuns      AgentRun[]
+  automations    Automation[]
+  auditLogs      AgentAuditLog[]
+  notifications  Notification[]
 
   @@index([email])
 }
@@ -544,4 +582,117 @@ model BillingWebhookEvent {
   eventKey    String   @unique
   eventType   String
   processedAt DateTime @default(now())
+}
+
+model Agent {
+  id          String      @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  status      AgentStatus @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs AgentRun[]
+
+  @@index([userId, status])
+}
+
+model AgentRun {
+  id              String         @id @default(uuid())
+  userId          String
+  agentId         String
+  automationRunId String?        @unique
+  conversationId  String?
+  status          AgentRunStatus @default(PLANNING)
+  goal            String
+  plan            Json?
+  steps           Json?
+  summary         String?
+  error           String?
+  failureClass    String?
+  startedAt       DateTime       @default(now())
+  completedAt     DateTime?
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent          Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  automationRun  AutomationRun?  @relation(fields: [automationRunId], references: [id], onDelete: SetNull)
+  auditLogs      AgentAuditLog[]
+
+  @@index([userId, startedAt])
+  @@index([agentId, startedAt])
+  @@index([status])
+}
+
+model Automation {
+  id          String                 @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  triggerType AutomationTriggerType
+  actionType  String
+  enabled     Boolean                @default(true)
+  schedule    Json?
+  eventType   String?
+  actionConfig Json?
+  nextRunAt   DateTime?
+  lastRunAt   DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  user User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs AutomationRun[]
+
+  @@index([userId, enabled])
+  @@index([enabled, nextRunAt])
+  @@index([userId, eventType])
+}
+
+model AutomationRun {
+  id              String              @id @default(uuid())
+  automationId    String
+  status          AutomationRunStatus @default(RUNNING)
+  idempotencyKey  String              @unique
+  startedAt       DateTime            @default(now())
+  completedAt     DateTime?
+  error           String?
+  result          Json?
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  agentRun   AgentRun?
+
+  @@index([automationId, startedAt])
+  @@index([status])
+}
+
+model AgentAuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  agentRunId String?
+  tool       String
+  action     String
+  status     String
+  timestamp  DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentRun AgentRun? @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+
+  @@index([userId, timestamp])
+  @@index([agentRunId])
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
 }

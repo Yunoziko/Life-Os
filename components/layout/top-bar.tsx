@@ -1,12 +1,12 @@
 "use client";
 
-import { Bell, Command, Menu, Search } from "lucide-react";
+import { Command, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/components/workspace-provider";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { NotificationBell, type NotificationItem } from "@/components/notifications/notification-bell";
 import type { BillingPlanId } from "@/lib/billing/config";
 
 export function TopBar({
@@ -15,12 +15,16 @@ export function TopBar({
   image,
   plan = "FREE",
   onOpenSidebar,
+  notifications = [],
+  unreadCount = 0,
 }: {
   name?: string | null;
   email?: string | null;
   image?: string | null;
   plan?: BillingPlanId;
   onOpenSidebar: () => void;
+  notifications?: NotificationItem[];
+  unreadCount?: number;
 }) {
   const { setCommandOpen, setSearchOpen } = useWorkspace();
 
@@ -63,21 +67,7 @@ export function TopBar({
         </kbd>
       </Button>
 
-      <Popover>
-        <PopoverTrigger
-          render={
-            <Button type="button" variant="ghost" size="icon" aria-label="Notifications" />
-          }
-        >
-          <Bell />
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-80">
-          <p className="text-sm font-medium">Notifications</p>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            You’re all caught up. AZIO will surface reminders here as your workspace fills in.
-          </p>
-        </PopoverContent>
-      </Popover>
+      <NotificationBell items={notifications} unread={unreadCount} />
 
       {plan === "PRO" ? (
         <Badge variant="secondary" className="hidden sm:inline-flex" render={<Link href="/settings/billing" />}>

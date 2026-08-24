@@ -7,10 +7,11 @@ export type FeatureKey =
   | "HABITS"
   | "ADVANCED_ANALYTICS"
   | "INTEGRATIONS"
-  | "AI_WEEKLY_REVIEW";
+  | "AI_WEEKLY_REVIEW"
+  | "AUTOMATION";
 
 export type CountableFeature = "AI_MESSAGES" | "PROJECTS" | "GOALS" | "HABITS" | "INTEGRATIONS";
-export type BooleanFeature = "ADVANCED_ANALYTICS" | "AI_WEEKLY_REVIEW";
+export type BooleanFeature = "ADVANCED_ANALYTICS" | "AI_WEEKLY_REVIEW" | "AUTOMATION";
 
 export const FEATURES: FeatureKey[] = [
   "AI_MESSAGES",
@@ -20,6 +21,7 @@ export const FEATURES: FeatureKey[] = [
   "ADVANCED_ANALYTICS",
   "INTEGRATIONS",
   "AI_WEEKLY_REVIEW",
+  "AUTOMATION",
 ];
 
 export const PRO_BENEFITS = [
@@ -29,6 +31,7 @@ export const PRO_BENEFITS = [
   "Advanced analytics",
   "More AI usage",
   "Advanced AZIO intelligence",
+  "Automations and AZIO agents",
   "External integrations",
 ] as const;
 
@@ -48,6 +51,7 @@ export type PlanDefinition = {
     INTEGRATIONS: number | null;
     ADVANCED_ANALYTICS: boolean;
     AI_WEEKLY_REVIEW: boolean;
+    AUTOMATION: boolean;
   };
   highlights: string[];
 };
@@ -69,6 +73,7 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
       INTEGRATIONS: 1,
       ADVANCED_ANALYTICS: false,
       AI_WEEKLY_REVIEW: false,
+      AUTOMATION: false,
     },
     highlights: [
       "Unlimited tasks, notes, and calendar",
@@ -96,12 +101,14 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
       INTEGRATIONS: null,
       ADVANCED_ANALYTICS: true,
       AI_WEEKLY_REVIEW: true,
+      AUTOMATION: true,
     },
     highlights: [
       "Unlimited projects, goals, and habits",
       "Advanced analytics and patterns",
       "Full AZIO AI with higher limits",
       "Weekly AI review and daily brief",
+      "Automations and AZIO agents",
       "All external integrations",
       "Ready for future automation",
     ],

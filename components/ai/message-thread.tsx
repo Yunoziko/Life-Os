@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { AIMarkdown } from "@/components/ai/markdown";
 import { ActionCard } from "@/components/ai/action-card";
+import { PlanReviewCard } from "@/components/agents/plan-review";
+import { AgentProgress } from "@/components/agents/agent-progress";
 import { cn } from "@/lib/utils";
 import type { ConversationMessage, StructuredAction } from "@/lib/ai/types";
 
@@ -19,6 +21,7 @@ export function MessageThread({
   streaming,
   thinking,
   pendingActions = [],
+  agentSteps = [],
   error,
   onRetry,
   timeZone,
@@ -28,6 +31,7 @@ export function MessageThread({
   streaming?: string;
   thinking?: boolean;
   pendingActions?: StructuredAction[];
+  agentSteps?: { label: string; status: string }[];
   error?: string | null;
   onRetry?: () => void;
   timeZone: string;
@@ -63,7 +67,12 @@ export function MessageThread({
                 <AIMarkdown content={message.content} />
               )}
             </div>
-            {!isUser
+            {!isUser && message.metadata?.agentRunId ? (
+              <PlanReviewCard
+                runId={message.metadata.agentRunId}
+                actions={actions.filter((action) => action.status === "awaiting_confirmation")}
+              />
+            ) : !isUser
               ? actions.map((action) => (
                   <ActionCard
                     key={action.id}
@@ -83,7 +92,7 @@ export function MessageThread({
       {thinking ? (
         <div className="flex items-start">
           <div className="rounded-2xl bg-muted/70 px-4 py-3 text-sm text-muted-foreground ring-1 ring-border/60">
-            Thinking…
+            {agentSteps.length ? <AgentProgress steps={agentSteps} /> : "Thinking…"}
           </div>
         </div>
       ) : null}

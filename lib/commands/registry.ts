@@ -16,6 +16,7 @@ import {
   Search,
   Settings,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import type { CreateEntityType } from "@/types";
 
@@ -334,5 +335,45 @@ export const appCommands: AppCommand[] = [
     group: "Navigate",
     icon: FolderKanban,
     action: { kind: "navigate", href: "/api/integrations/github/start" },
+  },
+  {
+    id: "create-automation",
+    label: "Create automation",
+    keywords: ["automate", "schedule", "agent", "azio"],
+    group: "Create",
+    icon: Zap,
+    action: { kind: "navigate", href: "/automations" },
+  },
+  {
+    id: "open-automations",
+    label: "Open automations",
+    keywords: ["automation", "schedule", "agent"],
+    group: "Navigate",
+    icon: Zap,
+    action: { kind: "navigate", href: "/automations" },
+  },
+  {
+    id: "run-automation",
+    label: "Run automation",
+    keywords: ["run", "agent", "now"],
+    group: "Navigate",
+    icon: Zap,
+    action: { kind: "navigate", href: "/automations" },
+  },
+  {
+    id: "pause-automations",
+    label: "Pause automations",
+    keywords: ["pause", "stop", "schedule"],
+    group: "Navigate",
+    icon: Zap,
+    action: { kind: "navigate", href: "/automations" },
+  },
+  {
+    id: "ask-azio-automate",
+    label: "Ask AZIO to automate…",
+    keywords: ["weekly review", "daily brief", "schedule"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai?prompt=Create%20an%20automation%20for%20my%20weekly%20review" },
   },
 ];

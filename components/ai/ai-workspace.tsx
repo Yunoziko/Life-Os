@@ -48,6 +48,7 @@ export function AIWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<ContextSource[]>([]);
   const [pendingActions, setPendingActions] = useState<StructuredAction[]>([]);
+  const [agentSteps, setAgentSteps] = useState<{ label: string; status: string }[]>([]);
   const lastPrompt = useRef<string | null>(null);
   const autoSent = useRef(false);
 
@@ -61,6 +62,7 @@ export function AIWorkspace({
     setThinking(true);
     setStreaming("");
     setPendingActions([]);
+    setAgentSteps([]);
     setMessages((current) => [
       ...current,
       {
@@ -112,6 +114,10 @@ export function AIWorkspace({
         }
         if (event.type === "action") {
           setPendingActions((current) => [...current, event.action]);
+          return;
+        }
+        if (event.type === "agent_progress") {
+          setAgentSteps(event.steps);
           return;
         }
         if (event.type === "error") {
@@ -239,6 +245,7 @@ export function AIWorkspace({
               streaming={streaming}
               thinking={thinking && !streaming}
               pendingActions={pendingActions}
+              agentSteps={agentSteps}
               error={error}
               onRetry={() => lastPrompt.current && void send(lastPrompt.current)}
               timeZone={timeZone}

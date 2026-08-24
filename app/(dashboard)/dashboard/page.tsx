@@ -14,7 +14,9 @@ import { HabitOverview } from "@/components/dashboard/habit-overview";
 import { AiInsight } from "@/components/dashboard/ai-insight";
 import { MomentumCard } from "@/components/dashboard/momentum-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { AzioActivity } from "@/components/dashboard/azio-activity";
 import { getMomentumSnapshot } from "@/lib/db/analytics";
+import { listRecentAudit } from "@/lib/agents/audit";
 
 export const metadata = {
   title: "AZIO Dashboard",
@@ -23,9 +25,10 @@ export const metadata = {
 export default async function DashboardPage() {
   const user = await requireUser();
   const timezone = user.profile?.timezone ?? "UTC";
-  const [data, momentum] = await Promise.all([
+  const [data, momentum, activity] = await Promise.all([
     getDashboardData(user.id, timezone),
     getMomentumSnapshot(user.id, timezone, user.profile?.weekStartsOn ?? 1),
+    listRecentAudit(user.id, 5),
   ]);
   const name = firstName(user.profile?.displayName ?? user.name);
   const hour = Number(
@@ -84,7 +87,8 @@ export default async function DashboardPage() {
           ) : null}
           <AiInsight insight={insight} />
         </FadeIn>
-        <FadeIn delay={0.2} className="lg:col-start-2 lg:row-start-4">
+        <FadeIn delay={0.2} className="space-y-4 lg:col-start-2 lg:row-start-4">
+          <AzioActivity items={activity} />
           <QuickActions />
         </FadeIn>
       </div>

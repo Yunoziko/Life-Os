@@ -7,6 +7,7 @@ import { calendarDate, utcMidnightFromCalendarDate } from "@/lib/utils/date";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 import { assertWithinLimit } from "@/lib/billing/entitlements";
 import { entitlementActionError } from "@/lib/billing/action";
+import { fireWorkspaceEvent } from "@/lib/automations/events";
 import type { ActionResult } from "@/types";
 
 function optionalDate(value?: string) {
@@ -158,6 +159,12 @@ export async function toggleHabitAction(
     }
 
     revalidateWorkspace([`/habits/${habit.id}`]);
+    fireWorkspaceEvent({
+      userId: user.id,
+      timeZone: timezone,
+      type: "HABIT_COMPLETED",
+      entityId: habit.id,
+    });
     return { ok: true, data: { completed: true } };
   } catch {
     return { ok: false, error: "Could not update the habit. Try again." };

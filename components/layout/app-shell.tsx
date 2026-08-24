@@ -13,6 +13,7 @@ import { BillingBanner } from "@/components/billing/billing-banner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { AssignableGoal, AssignableProject } from "@/lib/db/tasks";
 import type { BillingPlanId } from "@/lib/billing/config";
+import type { NotificationItem } from "@/components/notifications/notification-bell";
 
 export function AppShell({
   children,
@@ -21,6 +22,8 @@ export function AppShell({
   goals = [],
   plan = "FREE",
   billingWarning,
+  notifications = [],
+  unreadCount = 0,
 }: {
   children: React.ReactNode;
   user: {
@@ -32,6 +35,8 @@ export function AppShell({
   goals?: AssignableGoal[];
   plan?: BillingPlanId;
   billingWarning?: string | null;
+  notifications?: NotificationItem[];
+  unreadCount?: number;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -59,6 +64,8 @@ export function AppShell({
               email={user.email}
               image={user.image}
               plan={plan}
+              notifications={notifications}
+              unreadCount={unreadCount}
               onOpenSidebar={() => setSidebarOpen(true)}
             />
             <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-10">

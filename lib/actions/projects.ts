@@ -7,6 +7,7 @@ import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 import { parseGitHubRepo } from "@/lib/integrations/github/client";
 import { assertWithinLimit } from "@/lib/billing/entitlements";
 import { entitlementActionError } from "@/lib/billing/action";
+import { fireWorkspaceEvent } from "@/lib/automations/events";
 import type { ActionResult } from "@/types";
 
 function optionalDate(value?: string) {
@@ -62,6 +63,13 @@ export async function createProjectAction(
     });
 
     revalidateWorkspace([`/projects/${project.id}`]);
+    fireWorkspaceEvent({
+      userId: user.id,
+      timeZone: user.profile?.timezone ?? "UTC",
+      type: "PROJECT_CREATED",
+      entityId: project.id,
+      label: parsed.data.name,
+    });
     return { ok: true, data: project };
   } catch (error) {
     return entitlementActionError(error) ?? { ok: false, error: "Could not create the project. Try again." };

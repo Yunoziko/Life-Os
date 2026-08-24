@@ -136,4 +136,8 @@ export const UPGRADE_COPY: Record<FeatureKey, { title: string; body: string }> =
     title: "Unlock AZIO intelligence",
     body: "Weekly reviews and daily briefs are included with Pro.",
   },
+  AUTOMATION: {
+    title: "Unlock automations",
+    body: "Automation is available with AZIO Pro.",
+  },
 };

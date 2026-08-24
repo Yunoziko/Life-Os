@@ -47,6 +47,8 @@ export type AIMessageMetadata = {
   actions?: StructuredAction[];
   sources?: ContextSource[];
   tools?: { name: string; ok: boolean }[];
+  agentRunId?: string;
+  agentSteps?: { label: string; status: string }[];
 };
 
 export type ConversationSummary = {
@@ -77,6 +79,10 @@ export type ChatStreamEvent =
   | { type: "text"; delta: string }
   | { type: "action"; action: StructuredAction }
   | { type: "context"; sources: ContextSource[] }
+  | {
+      type: "agent_progress";
+      steps: { label: string; status: string }[];
+    }
   | {
       type: "done";
       conversationId: string;

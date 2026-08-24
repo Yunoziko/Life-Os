@@ -1,4 +1,4 @@
-export type JobName = "index.search" | "ai.summarize" | "habit.rollup" | "integration.sync";
+export type JobName = "index.search" | "ai.summarize" | "habit.rollup" | "integration.sync" | "automation.tick";
 
 export type Job<TPayload = Record<string, unknown>> = {
   name: JobName;

@@ -13,6 +13,7 @@ import {
   Sparkles,
   UserRound,
   Wallet,
+  Zap,
 } from "lucide-react";
 
 export type NavItem = {
@@ -38,6 +39,7 @@ export const primaryNav: NavItem[] = [
   { href: "/learning", label: "Learning", icon: BookOpen },
   { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/automations", label: "Automations", icon: Zap },
 ];
 
 export const assistantItem: NavItem = {
@@ -69,6 +71,7 @@ export const protectedPrefixes = [
   "/learning",
   "/finance",
   "/analytics",
+  "/automations",
   "/ai",
   "/settings",
   "/profile",
