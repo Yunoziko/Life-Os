@@ -53,6 +53,24 @@ enum CalendarEventSource {
   MANUAL
   TASK
   GOAL
+  GOOGLE
+}
+
+enum IntegrationProvider {
+  GOOGLE_CALENDAR
+  GMAIL
+  GITHUB
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  ERROR
+  DISCONNECTED
+}
+
+enum ExternalSyncOrigin {
+  IMPORTED
+  PUSHED
 }
 
 enum AIMessageRole {
@@ -84,6 +102,8 @@ model User {
   events        CalendarEvent[]
   conversations AIConversation[]
   milestones    Milestone[]
+  integrations  IntegrationAccount[]
+  externalMaps  ExternalItemMapping[]
 
   @@index([email])
 }
@@ -230,6 +250,7 @@ model Project {
   status      ProjectStatus @default(ACTIVE)
   color       String?
   icon        String?
+  githubRepo  String?
   startDate   DateTime?
   dueDate     DateTime?
   createdAt   DateTime      @default(now())
@@ -326,9 +347,10 @@ model CalendarEvent {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  goal    Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  goal        Goal?                @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  externalMap ExternalItemMapping?
 
   @@index([userId, startAt])
   @@index([projectId])
@@ -359,4 +381,50 @@ model AIMessage {
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+model IntegrationAccount {
+  id                    String              @id @default(uuid())
+  userId                String
+  provider              IntegrationProvider
+  status                IntegrationStatus   @default(CONNECTED)
+  accountLabel          String?
+  scopes                String[]            @default([])
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String?
+  tokenType             String?
+  expiresAt             DateTime?
+  lastSyncAt            DateTime?
+  lastError             String?
+  connectedAt           DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mappings ExternalItemMapping[]
+
+  @@unique([userId, provider])
+  @@index([userId, status])
+}
+
+model ExternalItemMapping {
+  id            String              @id @default(uuid())
+  userId        String
+  integrationId String
+  provider      IntegrationProvider
+  externalId    String
+  calendarId    String?
+  lifeOSEventId String?             @unique
+  origin        ExternalSyncOrigin
+  etag          String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  integration IntegrationAccount @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  event       CalendarEvent?     @relation(fields: [lifeOSEventId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, provider, externalId])
+  @@index([userId, provider])
+  @@index([integrationId])
 }

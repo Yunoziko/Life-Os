@@ -4,12 +4,19 @@ import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { createProjectSchema, updateProjectSchema } from "@/lib/validations/entities";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { parseGitHubRepo } from "@/lib/integrations/github/client";
 import type { ActionResult } from "@/types";
 
 function optionalDate(value?: string) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function githubRepoValue(value?: string) {
+  if (!value?.trim()) return null;
+  const parsed = parseGitHubRepo(value);
+  return parsed;
 }
 
 export async function createProjectAction(
@@ -24,10 +31,15 @@ export async function createProjectAction(
     icon: formData.get("icon") || undefined,
     startDate: formData.get("startDate") || "",
     dueDate: formData.get("dueDate") || "",
+    githubRepo: formData.get("githubRepo") || "",
   });
 
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create project." };
+  }
+
+  if (parsed.data.githubRepo && !parseGitHubRepo(parsed.data.githubRepo)) {
+    return { ok: false, error: "Use a GitHub repo like owner/name." };
   }
 
   try {
@@ -41,6 +53,7 @@ export async function createProjectAction(
         icon: parsed.data.icon ?? null,
         startDate: optionalDate(parsed.data.startDate),
         dueDate: optionalDate(parsed.data.dueDate),
+        githubRepo: githubRepoValue(parsed.data.githubRepo),
       },
       select: { id: true },
     });
@@ -63,10 +76,15 @@ export async function updateProjectAction(formData: FormData): Promise<ActionRes
     icon: formData.get("icon") || undefined,
     startDate: formData.get("startDate") || "",
     dueDate: formData.get("dueDate") || "",
+    githubRepo: formData.get("githubRepo") || "",
   });
 
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not update project." };
+  }
+
+  if (parsed.data.githubRepo && !parseGitHubRepo(parsed.data.githubRepo)) {
+    return { ok: false, error: "Use a GitHub repo like owner/name." };
   }
 
   const existing = await prisma.project.findFirst({
@@ -89,6 +107,7 @@ export async function updateProjectAction(formData: FormData): Promise<ActionRes
         icon: parsed.data.icon ?? null,
         startDate: optionalDate(parsed.data.startDate),
         dueDate: optionalDate(parsed.data.dueDate),
+        githubRepo: githubRepoValue(parsed.data.githubRepo),
       },
     });
     revalidateWorkspace([`/projects/${existing.id}`]);

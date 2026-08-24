@@ -10,6 +10,8 @@ const LABELS: Record<ContextSource, string> = {
   calendar: "Calendar",
   habits: "Habits",
   notes: "Notes",
+  gmail: "Gmail",
+  github: "GitHub",
 };
 
 export function ContextIndicator({ sources }: { sources: ContextSource[] }) {

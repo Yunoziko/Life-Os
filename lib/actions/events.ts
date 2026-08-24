@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { createEventSchema, updateEventSchema } from "@/lib/validations/entities";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 import { zonedDateTime } from "@/lib/utils/date";
+import { deleteSyncedGoogleEvent, maybePushLifeOSEvent } from "@/lib/integrations/google/sync";
 import type { ActionResult } from "@/types";
 
 function isAllDay(value?: string) {
@@ -118,6 +119,7 @@ export async function createEventAction(formData: FormData): Promise<ActionResul
       },
       select: { id: true },
     });
+    await maybePushLifeOSEvent(user.id, event.id);
     revalidateWorkspace();
     return { ok: true, data: event };
   } catch {
@@ -184,6 +186,7 @@ export async function updateEventAction(formData: FormData): Promise<ActionResul
         reminderMinutes: parsed.data.reminderMinutes ?? null,
       },
     });
+    await maybePushLifeOSEvent(user.id, existing.id);
     revalidateWorkspace();
     return { ok: true, data: { id: existing.id } };
   } catch {
@@ -200,6 +203,7 @@ export async function deleteEventAction(eventId: string): Promise<ActionResult> 
   if (!event) return { ok: false, error: "Event not found." };
 
   try {
+    await deleteSyncedGoogleEvent(user.id, event.id);
     await prisma.calendarEvent.delete({ where: { id: event.id } });
     revalidateWorkspace();
     return { ok: true };

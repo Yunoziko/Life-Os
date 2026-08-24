@@ -119,7 +119,11 @@ export async function runLifeOSChat(input: {
   const messages: AIChatMessage[] = [
     {
       role: "system",
-      content: [lifeOSSystemPrompt(now), formatMemoryForPrompt(memory), context.promptBlock]
+      content: [
+        lifeOSSystemPrompt(now),
+        formatMemoryForPrompt(memory),
+        context.promptBlock,
+      ]
         .filter(Boolean)
         .join("\n\n"),
     },

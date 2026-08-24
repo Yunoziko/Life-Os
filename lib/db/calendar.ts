@@ -25,6 +25,7 @@ export type CalendarItem = {
   goalTitle?: string | null;
   band?: "morning" | "afternoon" | "evening" | "all-day";
   completed?: boolean;
+  source?: "LIFEOS" | "GOOGLE";
 };
 
 const eventSelect = {
@@ -38,6 +39,7 @@ const eventSelect = {
   color: true,
   reminderMinutes: true,
   recurrence: true,
+  source: true,
   projectId: true,
   goalId: true,
   project: { select: { id: true, name: true } },
@@ -119,6 +121,7 @@ export async function getCalendarWorkspace(
         projectName: event.project?.name ?? null,
         goalTitle: event.goal?.title ?? null,
         band: event.allDay ? ("all-day" as const) : timeBand(hour),
+        source: event.source === "GOOGLE" ? ("GOOGLE" as const) : ("LIFEOS" as const),
       };
     }),
     ...tasks.map((task) => {

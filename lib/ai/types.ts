@@ -1,6 +1,14 @@
 export type AIRole = "user" | "assistant" | "system" | "tool";
 
-export type ContextSource = "tasks" | "goals" | "projects" | "calendar" | "habits" | "notes";
+export type ContextSource =
+  | "tasks"
+  | "goals"
+  | "projects"
+  | "calendar"
+  | "habits"
+  | "notes"
+  | "gmail"
+  | "github";
 
 export type AIActionType =
   | "CREATE_TASK"

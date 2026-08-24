@@ -12,6 +12,7 @@ export type ProjectFormValues = {
   icon?: string | null;
   startDate?: string;
   dueDate?: string;
+  githubRepo?: string | null;
 };
 
 export function ProjectFormFields({
@@ -102,6 +103,19 @@ export function ProjectFormFields({
           <Label htmlFor="project-due">Due date</Label>
           <Input id="project-due" name="dueDate" type="date" defaultValue={values?.dueDate} />
         </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="project-github">GitHub repository (optional)</Label>
+        <Input
+          id="project-github"
+          name="githubRepo"
+          defaultValue={values?.githubRepo ?? ""}
+          placeholder="owner/name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Link a repository to show recent commits, issues, and pull requests. Not required.
+        </p>
       </div>
     </div>
   );

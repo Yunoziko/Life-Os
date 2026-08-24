@@ -9,6 +9,8 @@ export function revalidateWorkspace(paths: string[] = []) {
     revalidatePath("/notes");
     revalidatePath("/calendar");
     revalidatePath("/habits");
+    revalidatePath("/settings");
+    revalidatePath("/ai");
     for (const path of paths) {
       revalidatePath(path);
     }

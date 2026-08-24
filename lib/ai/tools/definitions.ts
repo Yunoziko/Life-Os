@@ -104,6 +104,50 @@ export const lifeOSTools: AIToolDefinition[] = [
     parameters: { type: "object", additionalProperties: false, properties: {} },
   },
   {
+    name: "search_emails",
+    description:
+      "Search the user's Gmail. Use only when Gmail is connected and the user asked about email. Pass a focused Gmail query (keywords, sender, or Gmail search syntax). Returns sender, subject, date, snippet, and threadId only. Never dump the inbox.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      required: ["query"],
+      properties: { query: { type: "string" } },
+    },
+  },
+  {
+    name: "get_github_repositories",
+    description: "List GitHub repositories the user can access. Use only when GitHub is connected.",
+    parameters: { type: "object", additionalProperties: false, properties: {} },
+  },
+  {
+    name: "get_recent_commits",
+    description:
+      "Recent commits for a GitHub repository (owner/name). If repo is omitted, use a linked LifeOS project repo or the most recently pushed repository.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: { repo: { type: "string", description: "owner/name" } },
+    },
+  },
+  {
+    name: "get_open_issues",
+    description: "Open GitHub issues for a repository. Omit pull requests.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: { repo: { type: "string", description: "owner/name" } },
+    },
+  },
+  {
+    name: "get_pull_requests",
+    description: "Open GitHub pull requests for a repository.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: { repo: { type: "string", description: "owner/name" } },
+    },
+  },
+  {
     name: "create_task",
     description: "Create one task. LifeOS will confirm before saving.",
     parameters: {
@@ -278,6 +322,11 @@ export const READ_TOOLS = new Set([
   "get_habits",
   "search_notes",
   "get_weekly_summary",
+  "search_emails",
+  "get_github_repositories",
+  "get_recent_commits",
+  "get_open_issues",
+  "get_pull_requests",
 ]);
 
 export const AUTO_WRITE_TOOLS = new Set(["complete_task", "complete_habit", "create_note"]);

@@ -24,6 +24,7 @@ import { projectAccent, PROJECT_STATUS_LABEL } from "@/lib/projects/labels";
 import { ProjectGlyph } from "@/components/projects/project-glyph";
 import { calendarDate, formatShortDate } from "@/lib/utils/date";
 import { RelatedNotes } from "@/components/notes/related-notes";
+import { GitHubPanel } from "@/components/projects/github-panel";
 import { cn } from "@/lib/utils";
 import type { RelatedNoteCard } from "@/components/notes/related-notes";
 import type { ClientTask } from "@/lib/tasks/serialize";
@@ -43,12 +44,14 @@ export type ProjectWorkspaceData = {
   total: number;
   percent: number;
   goal: { id: string; title: string } | null;
+  githubRepo: string | null;
 };
 
 export function ProjectWorkspace({
   project,
   tasks,
   notes,
+  github,
   projects,
   goals,
   timezone,
@@ -56,6 +59,12 @@ export function ProjectWorkspace({
   project: ProjectWorkspaceData;
   tasks: ClientTask[];
   notes: RelatedNoteCard[];
+  github?: {
+    repo: string;
+    latestCommit: { sha: string; message: string; author: string; date: string; url: string } | null;
+    openIssues: { number: number; title: string; state: string; url: string; updatedAt: string }[];
+    openPulls: { number: number; title: string; state: string; url: string; updatedAt: string }[];
+  } | null;
   projects: AssignableProject[];
   goals: AssignableGoal[];
   timezone: string;
@@ -172,8 +181,22 @@ export function ProjectWorkspace({
                   {project.total - project.completed} open · {project.completed} done
                 </dd>
               </div>
+              <div>
+                <dt className="text-muted-foreground">GitHub</dt>
+                <dd>{project.githubRepo ?? "None linked"}</dd>
+              </div>
             </dl>
           </section>
+          {github ? (
+            <div className="mt-4">
+              <GitHubPanel
+                repo={github.repo}
+                latestCommit={github.latestCommit}
+                openIssues={github.openIssues}
+                openPulls={github.openPulls}
+              />
+            </div>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="tasks" className="pt-5">
@@ -231,6 +254,7 @@ export function ProjectWorkspace({
                 icon: project.icon ?? "folder",
                 startDate: project.startDate ? calendarDate(timezone, startDate ?? undefined) : "",
                 dueDate: project.dueDate ? calendarDate(timezone, dueDate ?? undefined) : "",
+                githubRepo: project.githubRepo ?? "",
               }}
             />
             <DialogFooter>

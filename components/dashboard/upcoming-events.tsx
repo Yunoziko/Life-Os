@@ -73,7 +73,11 @@ function UpcomingGroup({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{event.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {event.kind === "task" ? "TASK · " : "EVENT · "}
+                    {event.kind === "task"
+                      ? "TASK · "
+                      : event.source === "GOOGLE"
+                        ? "GOOGLE · "
+                        : "LIFEOS · "}
                     {event.allDay
                       ? `${formatShortDate(event.startAt, timezone)} · All day`
                       : `${formatShortDate(event.startAt, timezone)} · ${formatTime(event.startAt, timezone)}`}

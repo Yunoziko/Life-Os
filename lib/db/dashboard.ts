@@ -29,6 +29,7 @@ export type DashboardEvent = {
   endAt: Date | null;
   allDay: boolean;
   href: string;
+  source?: "LIFEOS" | "GOOGLE";
 };
 
 export type DashboardHabit = {
@@ -149,6 +150,14 @@ export async function getDashboardData(
       },
       orderBy: { startAt: "asc" },
       take: 5,
+      select: {
+        id: true,
+        title: true,
+        startAt: true,
+        endAt: true,
+        allDay: true,
+        source: true,
+      },
     }),
     prisma.habit.findMany({
       where: { userId, archived: false, paused: false },
@@ -267,6 +276,7 @@ export async function getDashboardData(
         endAt: event.endAt,
         allDay: event.allDay,
         href: `/calendar?date=${calendarDate(timeZone, event.startAt)}&event=${event.id}&view=day`,
+        source: event.source === "GOOGLE" ? ("GOOGLE" as const) : ("LIFEOS" as const),
       })),
       ...upcomingTasks
         .filter((task): task is typeof task & { dueAt: Date } => Boolean(task.dueAt))

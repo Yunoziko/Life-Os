@@ -4,6 +4,7 @@ import { getProjectWorkspace } from "@/lib/db/projects";
 import { getAssignableOptions } from "@/lib/db/tasks";
 import { serializeTasks } from "@/lib/tasks/serialize";
 import { ProjectWorkspace } from "@/components/projects/project-workspace";
+import { getGitHubRepoSnapshot } from "@/lib/integrations/github/client";
 
 export const metadata = { title: "Project" };
 
@@ -24,6 +25,9 @@ export default async function ProjectDetailPage({
   }
 
   const timezone = user.profile?.timezone ?? "UTC";
+  const github = project.githubRepo
+    ? await getGitHubRepoSnapshot(user.id, project.githubRepo).catch(() => null)
+    : null;
 
   return (
     <ProjectWorkspace
@@ -40,12 +44,23 @@ export default async function ProjectDetailPage({
         total: project.total,
         percent: project.percent,
         goal: project.goal,
+        githubRepo: project.githubRepo,
       }}
       tasks={serializeTasks(project.tasks)}
       notes={project.notes.map((note) => ({
         ...note,
         updatedAt: note.updatedAt.toISOString(),
       }))}
+      github={
+        github
+          ? {
+              repo: github.fullName,
+              latestCommit: github.latestCommit,
+              openIssues: github.openIssues,
+              openPulls: github.openPulls,
+            }
+          : null
+      }
       projects={projects}
       goals={goals}
       timezone={timezone}

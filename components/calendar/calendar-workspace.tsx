@@ -223,9 +223,11 @@ export function CalendarWorkspace({
           <DialogHeader>
             <DialogTitle>{editing === "new" ? "New event" : "Edit event"}</DialogTitle>
             <DialogDescription>
-              {selectedEvent?.project?.name || selectedEvent?.goal?.title
-                ? [selectedEvent.project?.name, selectedEvent.goal?.title].filter(Boolean).join(" · ")
-                : "A block of time that matters."}
+              {selectedEvent?.source === "GOOGLE"
+                ? "Google Calendar event"
+                : selectedEvent?.project?.name || selectedEvent?.goal?.title
+                  ? [selectedEvent.project?.name, selectedEvent.goal?.title].filter(Boolean).join(" · ")
+                  : "A block of time that matters."}
             </DialogDescription>
           </DialogHeader>
           <EventForm
@@ -550,6 +552,7 @@ function CalendarChip({
         }}
       >
         {label}
+        {item.source === "GOOGLE" ? <span className="ml-1 opacity-70">G</span> : null}
       </button>
     );
   }
@@ -574,6 +577,7 @@ function ItemRow({ item, timezone }: { item: CalendarItem; timezone: string }) {
         <p className="truncate text-sm font-medium">{item.title}</p>
         <p className="text-xs text-muted-foreground">
           {item.kind.toUpperCase()}
+          {item.source === "GOOGLE" ? " · Google" : item.kind === "event" ? " · LifeOS" : ""}
           {item.allDay || !item.startAt ? " · All day" : ` · ${formatTime(new Date(item.startAt), timezone)}`}
           {item.projectName ? ` · ${item.projectName}` : ""}
           {item.goalTitle ? ` · ${item.goalTitle}` : ""}

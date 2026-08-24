@@ -77,6 +77,7 @@ export const createProjectSchema = z.object({
   startDate: z.string().optional().or(z.literal("")),
   dueDate: z.string().optional().or(z.literal("")),
   goalId: emptyToUndefined,
+  githubRepo: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
 export const updateProjectSchema = createProjectSchema.extend({

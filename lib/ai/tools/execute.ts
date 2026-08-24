@@ -14,6 +14,16 @@ import {
   zonedDayRange,
 } from "@/lib/utils/date";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { IntegrationError } from "@/lib/integrations/errors";
+import { maybePushLifeOSEvent } from "@/lib/integrations/google/sync";
+import {
+  getGitHubRepositoriesTool,
+  getOpenIssuesTool,
+  getPullRequestsTool,
+  getRecentCommitsTool,
+  refreshCalendarIfConnected,
+  searchEmailsTool,
+} from "@/lib/ai/tools/integrations";
 
 const optionalId = z.string().uuid().optional();
 const optionalTitle = z.string().trim().min(1).max(160).optional();
@@ -158,11 +168,12 @@ export async function getTodayTasks({ userId, timeZone }: ToolContext): Promise<
 }
 
 export async function getUpcomingEvents({ userId, timeZone }: ToolContext): Promise<ToolResult> {
+  await refreshCalendarIfConnected({ userId, timeZone });
   const { start } = zonedDayRange(timeZone);
   const until = zonedDayRange(timeZone, utcMidnightFromCalendarDate(addCalendarDays(calendarDate(timeZone), 7))).start;
   const events = await prisma.calendarEvent.findMany({
     where: { userId, startAt: { gte: start, lt: until } },
-    select: { id: true, title: true, startAt: true, endAt: true, allDay: true, location: true },
+    select: { id: true, title: true, startAt: true, endAt: true, allDay: true, location: true, source: true },
     orderBy: { startAt: "asc" },
     take: 20,
   });
@@ -172,6 +183,7 @@ export async function getUpcomingEvents({ userId, timeZone }: ToolContext): Prom
       title: event.title,
       when: stamp(event.startAt, timeZone, event.allDay),
       location: event.location,
+      source: event.source === "GOOGLE" ? "google" : "lifeos",
     })),
     `${events.length} upcoming event${events.length === 1 ? "" : "s"}`
   );
@@ -196,7 +208,7 @@ export async function getActiveGoals({ userId, timeZone }: ToolContext): Promise
 export async function getActiveProjects({ userId, timeZone }: ToolContext): Promise<ToolResult> {
   const projects = await prisma.project.findMany({
     where: { userId, status: { in: ["ACTIVE", "PLANNED"] } },
-    select: { id: true, name: true, status: true, dueDate: true },
+    select: { id: true, name: true, status: true, dueDate: true, githubRepo: true },
     orderBy: { dueDate: "asc" },
     take: 20,
   });
@@ -319,11 +331,12 @@ export async function getWeeklySummary({ userId, timeZone }: ToolContext): Promi
 }
 
 async function getTodaySchedule(ctx: ToolContext): Promise<ToolResult> {
+  await refreshCalendarIfConnected(ctx);
   const { start, end } = zonedDayRange(ctx.timeZone);
   const [events, tasks] = await Promise.all([
     prisma.calendarEvent.findMany({
       where: { userId: ctx.userId, startAt: { gte: start, lt: end } },
-      select: { id: true, title: true, startAt: true, endAt: true, allDay: true },
+      select: { id: true, title: true, startAt: true, endAt: true, allDay: true, source: true },
       orderBy: { startAt: "asc" },
       take: 16,
     }),
@@ -344,6 +357,7 @@ async function getTodaySchedule(ctx: ToolContext): Promise<ToolResult> {
       id: event.id,
       title: event.title,
       when: stamp(event.startAt, ctx.timeZone, event.allDay),
+      source: event.source === "GOOGLE" ? "google" : "lifeos",
     })),
     timedTasks: tasks.map((task) => ({
       id: task.id,
@@ -674,6 +688,7 @@ export async function createCalendarEvent(ctx: ToolContext, args: unknown): Prom
     select: { id: true, title: true },
   });
   revalidateWorkspace();
+  await maybePushLifeOSEvent(ctx.userId, event.id);
   return ok(event, `Scheduled: ${event.title}`);
 }
 
@@ -780,6 +795,11 @@ const handlers: Record<string, (ctx: ToolContext, args: unknown) => Promise<Tool
   get_habits: (ctx) => queryHabits(ctx),
   search_notes: (ctx, args) => searchNotes(ctx, args),
   get_weekly_summary: (ctx) => getWeeklySummary(ctx),
+  search_emails: (ctx, args) => searchEmailsTool(ctx, args),
+  get_github_repositories: (ctx) => getGitHubRepositoriesTool(ctx),
+  get_recent_commits: (ctx, args) => getRecentCommitsTool(ctx, args),
+  get_open_issues: (ctx, args) => getOpenIssuesTool(ctx, args),
+  get_pull_requests: (ctx, args) => getPullRequestsTool(ctx, args),
   create_task: (ctx, args) => createTask(ctx, args),
   update_task: (ctx, args) => updateTask(ctx, args),
   complete_task: (ctx, args) => completeTask(ctx, args),
@@ -818,6 +838,7 @@ export async function executeLifeOSTool(
   } catch (error) {
     aiLog.toolFailed({ user: publicUserRef(ctx.userId), tool: name, ok: false });
     if (error instanceof AIError) return fail(error.toUserMessage());
+    if (error instanceof IntegrationError) return fail(error.toUserMessage());
     return fail("That action couldn’t be completed.");
   }
 }

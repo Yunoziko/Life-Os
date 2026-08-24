@@ -10,6 +10,7 @@ import {
 } from "@/lib/utils/date";
 import type { ContextSource } from "@/lib/ai/types";
 import { AIError } from "@/lib/ai/errors";
+import { getIntegrationConnectionMap, integrationStatusPrompt } from "@/lib/integrations/status";
 
 export type LifeOSContext = {
   promptBlock: string;
@@ -55,6 +56,7 @@ export async function buildLifeOSContext(
       habits,
       recentNotes,
       completedWeek,
+      integrations,
     ] = await Promise.all([
       prisma.task.findMany({
         where: {
@@ -91,6 +93,7 @@ export async function buildLifeOSContext(
           endAt: true,
           allDay: true,
           location: true,
+          source: true,
         },
         orderBy: { startAt: "asc" },
         take: 15,
@@ -116,6 +119,7 @@ export async function buildLifeOSContext(
           name: true,
           status: true,
           dueDate: true,
+          githubRepo: true,
           goal: { select: { title: true } },
         },
         orderBy: [{ status: "asc" }, { dueDate: "asc" }],
@@ -157,6 +161,7 @@ export async function buildLifeOSContext(
         orderBy: { completedAt: "desc" },
         take: 12,
       }),
+      getIntegrationConnectionMap(userId),
     ]);
 
     const snapshot = {
@@ -190,6 +195,7 @@ export async function buildLifeOSContext(
         until: event.endAt ? stamp(event.endAt, timeZone, event.allDay) : null,
         allDay: event.allDay,
         location: event.location,
+        source: event.source === "GOOGLE" ? "google" : "lifeos",
       })),
       activeGoals: activeGoals.map((goal) => ({
         id: goal.id,
@@ -206,6 +212,7 @@ export async function buildLifeOSContext(
         status: project.status,
         dueDate: isoDate(project.dueDate, timeZone),
         goal: project.goal?.title,
+        githubRepo: project.githubRepo,
       })),
       recentNotes: recentNotes.map((note) => ({
         id: note.id,
@@ -227,6 +234,8 @@ export async function buildLifeOSContext(
       calendar: snapshot.upcomingEvents.length,
       habits: snapshot.today.habits.length,
       notes: snapshot.recentNotes.length,
+      gmail: integrations.gmail.connected ? 1 : 0,
+      github: integrations.github.connected ? 1 : 0,
     };
 
     const sources = (Object.keys(considered) as ContextSource[]).filter(
@@ -236,6 +245,7 @@ export async function buildLifeOSContext(
     const promptBlock = [
       "Authorized LifeOS snapshot for this user only. Treat as ground truth. Do not invent records.",
       "IDs are for tool calls only — never show them to the user.",
+      integrationStatusPrompt(integrations),
       JSON.stringify(snapshot),
     ].join("\n");
 
