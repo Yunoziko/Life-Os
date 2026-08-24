@@ -74,20 +74,87 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - Landing, login, signup
 - Protected workspace shell
-- Dashboard with honest empty states
-- Command palette (`⌘K`)
-- Global search (`/`)
-- Foundation pages for every planned module
-- Prisma models for users, tasks, goals, projects, notes, habits, calendar, and AI conversations
-- Redis, jobs, storage, and AI provider abstractions — ready, not wired
+- Dashboard, tasks, goals, projects, notes, habits, calendar
+- Command palette (`⌘K`) and global search
+- AZIO AI, integrations, analytics, Razorpay billing
+- AI agents and automations
+- Background automation worker and in-app notifications
 
 ## Scripts
 
 - `npm run dev` — development server
+- `npm run worker` — background automation worker (also runs the scheduler)
+- `npm run scheduler` — scheduler only, for a split production process
+- `npm run test` — unit tests
 - `npm run typecheck` — TypeScript
 - `npm run lint` — ESLint
 - `npm run db:push` — sync Prisma schema
 - `npm run db:studio` — inspect data
+
+## Background automations
+
+Scheduled automations do **not** run in the browser or inside normal page requests. A worker process claims due jobs from PostgreSQL and executes them.
+
+Local development:
+
+```bash
+# Terminal 1
+npm run dev
+
+# Terminal 2
+npm run worker
+```
+
+Optional third terminal if you want the scheduler isolated:
+
+```bash
+npm run scheduler
+```
+
+If `npm run worker` is running, you do not need a separate scheduler. Set `AUTOMATION_WORKER_INCLUDE_SCHEDULER=0` on the worker if you split the processes.
+
+### How to test Daily Brief
+
+1. Upgrade the account to AZIO Pro.
+2. Open `/automations` and use the **Morning Brief** template (every day at 8:00 AM in your profile timezone).
+3. Click **Run now**. The run should show **Queued**, then **Running**, then **Completed**.
+4. Open `/notifications`. You should see **Your Daily Brief is ready.**
+5. The generated brief is stored as a note.
+
+If a run stays **Queued**, the worker is not running.
+
+### Failed jobs
+
+- Open the automation detail page and inspect the run. Users see a safe error, not a stack trace.
+- Worker logs include `automationId`, `runId`, `user` (short ref), `status`, and `duration` only.
+- Transient failures retry 3 times with backoff: 30s, 2 minutes, 10 minutes.
+
+### Worker health
+
+`GET /api/health/worker` returns worker status, queue depth, and last successful execution. Protect it with `CRON_SECRET` or `WORKER_HEALTH_SECRET`. In production it requires a bearer token or a signed-in session.
+
+### Redis / BullMQ
+
+Redis is **not** required. The MVP queue is database-backed (`AutomationRun` rows in `QUEUED`, claimed with `FOR UPDATE SKIP LOCKED`).
+
+Recommended production architecture:
+
+```
+Web app  →  PostgreSQL
+Scheduler →  enqueues due automations
+Worker    →  claims and executes jobs
+Redis     →  optional BullMQ queue (`azio-automation`) when REDIS_URL is set later
+```
+
+Set `REDIS_URL` only when you add a Redis-backed queue. Leave it empty for local PostgreSQL-backed jobs.
+
+Environment:
+
+```bash
+REDIS_URL=""
+AUTOMATION_WORKER_CONCURRENCY=5
+QUEUE_DRIVER=database
+```
 
 ## Razorpay billing
 

@@ -12,7 +12,7 @@ import {
   updateAutomationRecord,
 } from "@/lib/db/automations";
 import { prisma } from "@/lib/db/prisma";
-import { runAutomation } from "@/lib/automations/runner";
+import { enqueueManualAutomation } from "@/lib/jobs/scheduler";
 import { templateById } from "@/lib/automations/templates";
 import { nextScheduledAt, type AutomationSchedule } from "@/lib/automations/schedule";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
@@ -116,7 +116,11 @@ export async function toggleAutomationAction(
     const schedule = existing.schedule as AutomationSchedule | null;
     await updateAutomationRecord(user.id, id, {
       enabled,
-      nextRunAt: enabled && existing.triggerType === "SCHEDULE" && schedule ? nextScheduledAt(schedule) : existing.nextRunAt,
+      pauseReason: enabled ? null : existing.pauseReason === "PRO_REQUIRED" ? existing.pauseReason : null,
+      nextRunAt: enabled && existing.triggerType === "SCHEDULE" && schedule ? nextScheduledAt({
+        ...schedule,
+        timeZone: existing.timezone || schedule.timeZone || user.profile?.timezone || "UTC",
+      }) : existing.nextRunAt,
     });
     revalidateWorkspace(["/automations", `/automations/${id}`]);
     return { ok: true };
@@ -144,20 +148,48 @@ export async function runAutomationNowAction(id: string): Promise<ActionResult<{
   try {
     const user = await requireUser();
     await requirePro(user.id);
-    const run = await runAutomation({
+    const existing = await getOwnedAutomation(user.id, id);
+    if (!existing) return { ok: false, error: "Automation not found." };
+    const run = await enqueueManualAutomation({
       automationId: id,
       userId: user.id,
-      timeZone: user.profile?.timezone ?? "UTC",
-      trigger: "MANUAL",
-      idempotencyKey: `${id}:manual:${Date.now()}`,
     });
-    if (!run) return { ok: false, error: "Could not start that automation." };
+    revalidateWorkspace(["/automations", `/automations/${id}`]);
     return { ok: true, data: { runId: run.id } };
   } catch (error) {
     if (error instanceof EntitlementError) {
       return entitlementActionError(error) ?? { ok: false, error: error.message };
     }
-    return { ok: false, error: error instanceof Error ? error.message : "Could not run that automation." };
+    return { ok: false, error: error instanceof Error ? error.message : "Could not queue that automation." };
+  }
+}
+
+export async function updateAutomationAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireUser();
+    await requirePro(user.id);
+    const id = String(formData.get("id") || "");
+    const existing = await getOwnedAutomation(user.id, id);
+    if (!existing) return { ok: false, error: "Automation not found." };
+    const name = String(formData.get("name") || "").trim().slice(0, 80);
+    if (!name) return { ok: false, error: "Give the automation a name." };
+    const timeZone = String(formData.get("timezone") || existing.timezone || user.profile?.timezone || "UTC");
+    const schedule =
+      existing.triggerType === "SCHEDULE" ? parseSchedule(formData, timeZone) : null;
+    if (existing.triggerType === "SCHEDULE" && !schedule) {
+      return { ok: false, error: "Choose how often this should run." };
+    }
+    await updateAutomationRecord(user.id, id, {
+      name,
+      description: String(formData.get("description") || "").trim() || null,
+      timezone: timeZone,
+      schedule,
+      nextRunAt: schedule ? nextScheduledAt(schedule) : existing.nextRunAt,
+    });
+    revalidateWorkspace(["/automations", `/automations/${id}`]);
+    return { ok: true };
+  } catch (error) {
+    return entitlementActionError(error) ?? { ok: false, error: "Could not update that automation." };
   }
 }
 

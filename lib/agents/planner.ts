@@ -27,6 +27,7 @@ export function detectObjectiveKind(goal: string, eventType?: string): AgentObje
   if (/weekly review|summarize my week/.test(text)) return "weekly_review";
   if (/habit review/.test(text)) return "habit_review";
   if (/goal check-?in|review my goals/.test(text)) return "goal_checkin";
+  if (/project review/.test(text)) return "project_review";
   return "custom";
 }
 
@@ -66,21 +67,30 @@ export function deterministicPlan(input: {
     ],
     daily_brief: [
       step("get_today_tasks"),
+      step("get_tasks", { priority: "HIGH" }),
       step("get_today_schedule"),
-      step("get_today_habits"),
+      step("get_upcoming_events"),
       step("get_active_goals"),
-      step("create_note", { title: "Daily brief" }, { requiresConfirmation: !input.autoConfirm }),
+      step("get_today_habits"),
+      step("create_note", { title: "Daily brief" }),
     ],
     weekly_review: [
       step("get_weekly_summary"),
       step("get_active_goals"),
       step("get_habits"),
+      step("get_active_projects"),
       step("get_upcoming_events"),
       step("get_github_activity"),
-      step("create_note", { title: "Weekly review" }, { requiresConfirmation: !input.autoConfirm }),
+      step("create_note", { title: "Weekly review" }),
     ],
     habit_review: [step("get_today_habits"), step("get_habits")],
     goal_checkin: [step("get_active_goals"), step("get_tasks")],
+    project_review: [
+      step("get_active_projects"),
+      step("get_tasks"),
+      step("get_active_goals"),
+      step("create_note", { title: "Project review" }),
+    ],
     project_checklist: [
       step("get_active_projects"),
       step("create_task", { title: "Clarify outcome and constraints" }),

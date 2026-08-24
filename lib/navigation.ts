@@ -72,6 +72,7 @@ export const protectedPrefixes = [
   "/finance",
   "/analytics",
   "/automations",
+  "/notifications",
   "/ai",
   "/settings",
   "/profile",

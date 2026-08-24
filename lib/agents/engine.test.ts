@@ -15,7 +15,7 @@ import {
 } from "./planner";
 import { looksLikePromptInjection, sanitizeToolPayload, wrapUntrustedData } from "./injection";
 import { MAX_AGENT_STEPS } from "./types";
-import { nextScheduledAt, scheduleIdempotencyKey } from "../automations/schedule";
+import { calculateNextRun, scheduleIdempotencyKey } from "../automations/schedule";
 import { PLAN_CATALOG } from "../billing/config";
 import { planHasFeature } from "../billing/rules";
 
@@ -62,10 +62,12 @@ test("planner emits structured plans for known objectives", () => {
   assert.ok(plan.steps.length <= MAX_AGENT_STEPS);
 });
 
-test("weekly review and project checklist plans are structured", () => {
+test("weekly review, project review, and project checklist plans are structured", () => {
   const weekly = deterministicPlan({ goal: "Prepare my weekly review", autoConfirm: true });
+  const projectReview = deterministicPlan({ goal: "Project review" });
   const checklist = deterministicPlan({ goal: "Suggest a project planning checklist" });
   assert.equal(weekly.steps.some((step) => step.tool === "create_note"), true);
+  assert.equal(projectReview.steps.some((step) => step.tool === "get_active_projects"), true);
   assert.ok(checklist.steps.filter((step) => step.tool === "create_task").length >= 3);
   assert.equal(checklist.steps.some((step) => step.requiresConfirmation), true);
 });
@@ -98,21 +100,20 @@ test("failure classification", () => {
 
 test("schedules use the user timezone rather than assuming UTC labels", () => {
   const from = new Date("2026-08-24T02:00:00.000Z");
-  const next = nextScheduledAt({
+  const next = calculateNextRun({
     frequency: "DAILY",
     time: "08:00",
     timeZone: "Asia/Kolkata",
   }, from);
   assert.ok(next.getTime() > from.getTime());
-  const key1 = scheduleIdempotencyKey("auto-1", { frequency: "DAILY", time: "08:00", timeZone: "Asia/Kolkata" }, from);
-  const key2 = scheduleIdempotencyKey("auto-1", { frequency: "DAILY", time: "08:00", timeZone: "Asia/Kolkata" }, from);
+  const key1 = scheduleIdempotencyKey("auto-1", next);
+  const key2 = scheduleIdempotencyKey("auto-1", next);
   assert.equal(key1, key2);
 });
 
 test("weekly schedule keys differ from daily keys", () => {
-  const at = new Date("2026-08-24T02:00:00.000Z");
-  const daily = scheduleIdempotencyKey("a", { frequency: "DAILY", time: "08:00", timeZone: "UTC" }, at);
-  const weekly = scheduleIdempotencyKey("a", { frequency: "WEEKLY", time: "08:00", weekday: 0, timeZone: "UTC" }, at);
+  const daily = scheduleIdempotencyKey("a", new Date("2026-08-24T02:30:00.000Z"));
+  const weekly = scheduleIdempotencyKey("a", new Date("2026-08-30T14:30:00.000Z"));
   assert.notEqual(daily, weekly);
 });
 

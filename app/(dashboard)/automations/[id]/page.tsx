@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getOwnedAutomation } from "@/lib/db/automations";
+import { formatNextRunLabel, formatScheduleLabel, parseAutomationSchedule } from "@/lib/automations/schedule";
 import { PageHeader } from "@/components/layout/page-header";
 import { AutomationDetail } from "@/components/automations/automation-detail";
 
@@ -16,6 +17,8 @@ export default async function AutomationDetailPage({
   const { id } = await params;
   const automation = await getOwnedAutomation(user.id, id);
   if (!automation) notFound();
+  const timeZone = automation.timezone || user.profile?.timezone || "UTC";
+  const schedule = parseAutomationSchedule(automation.schedule, timeZone);
 
   return (
     <div>
@@ -28,7 +31,20 @@ export default async function AutomationDetailPage({
           </Link>
         }
       />
-      <AutomationDetail automation={automation} />
+      <AutomationDetail
+        automation={{
+          ...automation,
+          timezone: timeZone,
+          pauseReason: automation.pauseReason,
+          scheduleLabel: schedule
+            ? formatScheduleLabel(schedule)
+            : automation.triggerType === "EVENT"
+              ? automation.eventType ?? "Event"
+              : "Manual",
+          nextRunLabel: automation.nextRunAt ? formatNextRunLabel(automation.nextRunAt, timeZone) : null,
+          schedule,
+        }}
+      />
     </div>
   );
 }

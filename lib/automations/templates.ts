@@ -6,6 +6,7 @@ export type AutomationTemplateId =
   | "weekly_review"
   | "daily_planning"
   | "habit_review"
+  | "project_review"
   | "project_planning"
   | "goal_checkin";
 
@@ -24,7 +25,7 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
   {
     id: "morning_brief",
     name: "Morning Brief",
-    description: "A calm snapshot of tasks, calendar, and habits.",
+    description: "Today’s tasks, calendar, goals, habits, and upcoming deadlines.",
     triggerType: "SCHEDULE",
     actionType: "DAILY_BRIEF",
     objective: "Generate my daily brief",
@@ -33,11 +34,11 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
   {
     id: "weekly_review",
     name: "Weekly Review",
-    description: "Completed work, goals, habits, calendar, and GitHub.",
+    description: "What went well, what needs attention, and next week’s focus.",
     triggerType: "SCHEDULE",
     actionType: "WEEKLY_REVIEW",
     objective: "Prepare my weekly review",
-    schedule: { frequency: "WEEKLY", time: "08:00", weekday: 0 },
+    schedule: { frequency: "WEEKLY", time: "20:00", weekday: 0 },
   },
   {
     id: "daily_planning",
@@ -56,6 +57,15 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     actionType: "HABIT_REVIEW",
     objective: "Habit review",
     schedule: { frequency: "DAILY", time: "20:00" },
+  },
+  {
+    id: "project_review",
+    name: "Project Review",
+    description: "A weekly look at active projects and what needs a next step.",
+    triggerType: "SCHEDULE",
+    actionType: "PROJECT_REVIEW",
+    objective: "Project review",
+    schedule: { frequency: "WEEKLY", time: "09:00", weekday: 1 },
   },
   {
     id: "project_planning",

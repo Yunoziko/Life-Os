@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Bell,
   BookOpen,
   CalendarDays,
   CheckSquare,
@@ -351,6 +352,14 @@ export const appCommands: AppCommand[] = [
     group: "Navigate",
     icon: Zap,
     action: { kind: "navigate", href: "/automations" },
+  },
+  {
+    id: "open-notifications",
+    label: "Open notifications",
+    keywords: ["bell", "alerts", "brief", "approval"],
+    group: "Navigate",
+    icon: Bell,
+    action: { kind: "navigate", href: "/notifications" },
   },
   {
     id: "run-automation",

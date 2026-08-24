@@ -15,6 +15,7 @@ export function AutomationBuilder({ open, onOpenChange }: { open: boolean; onOpe
   const mobile = useMediaQuery("(max-width: 640px)");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [frequency, setFrequency] = useState("DAILY");
   const [triggerType, setTriggerType] = useState("SCHEDULE");
 
   const form = (
@@ -46,7 +47,7 @@ export function AutomationBuilder({ open, onOpenChange }: { open: boolean; onOpe
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="frequency">Repeat</Label>
-            <NativeSelect id="frequency" name="frequency" defaultValue="DAILY">
+            <NativeSelect id="frequency" name="frequency" value={frequency} onChange={(event) => setFrequency(event.target.value)}>
               <option value="DAILY">Daily</option>
               <option value="WEEKLY">Weekly</option>
               <option value="MONTHLY">Monthly</option>
@@ -68,6 +69,12 @@ export function AutomationBuilder({ open, onOpenChange }: { open: boolean; onOpe
               <option value="6">Saturday</option>
             </NativeSelect>
           </div>
+          {frequency === "MONTHLY" ? (
+            <div className="space-y-2">
+              <Label htmlFor="monthDay">Day of month</Label>
+              <Input id="monthDay" name="monthDay" type="number" min={1} max={28} defaultValue={1} />
+            </div>
+          ) : null}
         </div>
       ) : null}
       {triggerType === "EVENT" ? (

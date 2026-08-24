@@ -9,9 +9,11 @@ import type { StructuredAction } from "@/lib/ai/types";
 export function PlanReviewCard({
   runId,
   actions,
+  rejectLabel = "Cancel",
 }: {
   runId: string;
   actions: StructuredAction[];
+  rejectLabel?: string;
 }) {
   const [pending, start] = useTransition();
   const [status, setStatus] = useState<"open" | "done" | "cancelled">("open");
@@ -53,11 +55,11 @@ export function PlanReviewCard({
         <div className="mt-3 flex gap-2">
           <Button type="button" size="sm" disabled={pending} onClick={() => run("confirm")}>
             <Check />
-            Confirm
+            Approve
           </Button>
           <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run("cancel")}>
             <X />
-            Cancel
+            {rejectLabel}
           </Button>
         </div>
       ) : null}

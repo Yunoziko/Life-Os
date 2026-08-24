@@ -1,4 +1,4 @@
-import { addCalendarDays, calendarDate, zonedDateTime } from "@/lib/utils/date";
+import { addCalendarDays, calendarDate, formatTime, zonedDateTime } from "@/lib/utils/date";
 
 export type ScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
 
@@ -10,8 +10,32 @@ export type AutomationSchedule = {
   timeZone: string;
 };
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+
 export function isValidTime(value: string) {
   return /^\d{2}:\d{2}$/.test(value);
+}
+
+export function parseAutomationSchedule(value: unknown, fallbackTimeZone = "UTC"): AutomationSchedule | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  if (record.frequency !== "DAILY" && record.frequency !== "WEEKLY" && record.frequency !== "MONTHLY") {
+    return null;
+  }
+  return {
+    frequency: record.frequency,
+    time: typeof record.time === "string" && isValidTime(record.time) ? record.time : "08:00",
+    weekday: typeof record.weekday === "number" ? record.weekday : undefined,
+    monthDay: typeof record.monthDay === "number" ? record.monthDay : undefined,
+    timeZone: typeof record.timeZone === "string" && record.timeZone.trim() ? record.timeZone : fallbackTimeZone,
+  };
+}
+
+export function calculateNextRun(
+  schedule: AutomationSchedule,
+  from = new Date()
+): Date {
+  return nextScheduledAt(schedule, from);
 }
 
 export function nextScheduledAt(schedule: AutomationSchedule, from = new Date()): Date {
@@ -48,21 +72,52 @@ export function nextScheduledAt(schedule: AutomationSchedule, from = new Date())
   return zonedDateTime(addCalendarDays(today, 1), time, timeZone);
 }
 
-export function scheduleIdempotencyKey(automationId: string, schedule: AutomationSchedule, at = new Date()) {
-  const ymd = calendarDate(schedule.timeZone || "UTC", at);
-  if (schedule.frequency === "WEEKLY") {
-    const week = weekStamp(at, schedule.timeZone || "UTC");
-    return `${automationId}:schedule:${week}`;
-  }
-  if (schedule.frequency === "MONTHLY") {
-    return `${automationId}:schedule:${ymd.slice(0, 7)}`;
-  }
-  return `${automationId}:schedule:${ymd}`;
+export function scheduleIdempotencyKey(automationId: string, scheduledFor: Date) {
+  return `${automationId}:schedule:${scheduledFor.toISOString()}`;
 }
 
-function weekStamp(date: Date, timeZone: string) {
-  const ymd = calendarDate(timeZone, date);
-  const utc = Date.parse(`${ymd}T00:00:00.000Z`);
-  const week = Math.floor(utc / (7 * 86_400_000));
-  return `W${week}`;
+export function formatScheduleLabel(schedule: AutomationSchedule) {
+  const clock = formatClockLabel(schedule.time, schedule.timeZone);
+  if (schedule.frequency === "DAILY") return `Every day at ${clock}`;
+  if (schedule.frequency === "WEEKLY") {
+    const day = WEEKDAYS[((schedule.weekday ?? 0) % 7 + 7) % 7];
+    return `Every ${day} at ${clock}`;
+  }
+  const monthDay = Math.min(28, Math.max(1, schedule.monthDay ?? 1));
+  return `Every month on the ${ordinal(monthDay)} at ${clock}`;
+}
+
+export function formatNextRunLabel(date: Date, timeZone: string, from = new Date()) {
+  const today = calendarDate(timeZone, from);
+  const target = calendarDate(timeZone, date);
+  const clock = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+  if (target === today) return `Today, ${clock}`;
+  const tomorrow = addCalendarDays(today, 1);
+  if (target === tomorrow) return `Tomorrow, ${clock}`;
+  const day = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+  return `${day}, ${clock}`;
+}
+
+function formatClockLabel(time: string, timeZone: string) {
+  const today = calendarDate(timeZone);
+  const date = zonedDateTime(today, isValidTime(time) ? time : "08:00", timeZone);
+  return formatTime(date, timeZone);
+}
+
+function ordinal(value: number) {
+  const mod100 = value % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${value}th`;
+  if (value % 10 === 1) return `${value}st`;
+  if (value % 10 === 2) return `${value}nd`;
+  if (value % 10 === 3) return `${value}rd`;
+  return `${value}th`;
 }

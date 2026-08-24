@@ -397,6 +397,7 @@ async function queryTasks(ctx: ToolContext, args: unknown): Promise<ToolResult> 
     .object({
       query: z.string().trim().max(120).optional(),
       status: z.enum(["TODO", "IN_PROGRESS", "DONE", "CANCELLED"]).optional(),
+      priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
     })
     .safeParse(args ?? {});
   if (!parsed.success) return fail("Invalid task filters.");
@@ -405,6 +406,7 @@ async function queryTasks(ctx: ToolContext, args: unknown): Promise<ToolResult> 
     where: {
       userId: ctx.userId,
       ...(parsed.data.status ? { status: parsed.data.status } : { status: { not: "CANCELLED" } }),
+      ...(parsed.data.priority ? { priority: parsed.data.priority } : {}),
       ...(parsed.data.query
         ? {
             OR: [

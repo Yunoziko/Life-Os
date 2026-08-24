@@ -16,8 +16,13 @@ export type AutomationListItem = {
   description: string | null;
   triggerType: string;
   enabled: boolean;
+  pauseReason: string | null;
+  scheduleLabel: string;
+  nextRunLabel: string | null;
+  lastRunLabel: string | null;
   nextRunAt: string | null;
   lastRunAt: string | null;
+  latestStatus: string | null;
   runs: { id: string; status: string; startedAt: string }[];
 };
 
@@ -30,7 +35,7 @@ export function AutomationsView({
   isPro: boolean;
   builder: React.ReactNode;
 }) {
-  if (!isPro) {
+  if (!isPro && !items.length) {
     return (
       <ProGate feature="AUTOMATION" title="Automation is available with AZIO Pro.">
         Let AZIO handle the repetitive work — morning briefs, weekly reviews, and project checklists.
@@ -44,17 +49,22 @@ export function AutomationsView({
 
   return (
     <div className="space-y-8">
+      {!isPro ? (
+        <p className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          This automation is paused because AZIO Pro is required.
+        </p>
+      ) : null}
       {builder}
       {!items.length ? (
         <EmptyState
           icon={Zap}
           title="No automations yet."
-          description="Start with a template. AZIO will run it on a schedule or when something happens."
+          description="Start with a template. AZIO will run it on a schedule, even if this tab is closed."
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          <AutomationGroup title="Active" items={active} />
-          <AutomationGroup title="Paused" items={paused} />
+          <AutomationGroup title="Active" items={active} isPro={isPro} />
+          <AutomationGroup title="Paused" items={paused} isPro={isPro} />
         </div>
       )}
       {recent.length ? (
@@ -65,7 +75,7 @@ export function AutomationsView({
               <li key={run.id} className="rounded-2xl border border-border/70 bg-card px-4 py-3 text-sm">
                 <span className="font-medium">{run.name}</span>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  {run.status.toLowerCase()} · {new Date(run.startedAt).toLocaleString()}
+                  {statusLabel(run.status)} · {new Date(run.startedAt).toLocaleString()}
                 </span>
               </li>
             ))}
@@ -76,7 +86,15 @@ export function AutomationsView({
   );
 }
 
-function AutomationGroup({ title, items }: { title: string; items: AutomationListItem[] }) {
+function AutomationGroup({
+  title,
+  items,
+  isPro,
+}: {
+  title: string;
+  items: AutomationListItem[];
+  isPro: boolean;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
 
@@ -91,16 +109,21 @@ function AutomationGroup({ title, items }: { title: string; items: AutomationLis
             <li key={item.id} className="rounded-xl bg-muted/40 px-3 py-3">
               <button type="button" className="text-left" onClick={() => router.push(`/automations/${item.id}`)}>
                 <p className="text-sm font-medium">{item.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.scheduleLabel}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {item.triggerType === "SCHEDULE" ? "Scheduled" : item.triggerType === "EVENT" ? "On event" : "Manual"}
+                  {item.enabled ? "Active" : item.pauseReason === "PRO_REQUIRED" ? "Paused · AZIO Pro required" : "Paused"}
+                  {item.nextRunLabel ? ` · Next run: ${item.nextRunLabel}` : ""}
                 </p>
+                {item.latestStatus ? (
+                  <p className="mt-1 text-xs text-muted-foreground">Status: {statusLabel(item.latestStatus)}</p>
+                ) : null}
               </button>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={pending}
+                  disabled={pending || !isPro}
                   onClick={() =>
                     start(async () => {
                       await runAutomationNowAction(item.id);
@@ -114,7 +137,7 @@ function AutomationGroup({ title, items }: { title: string; items: AutomationLis
                   type="button"
                   size="sm"
                   variant="ghost"
-                  disabled={pending}
+                  disabled={pending || !isPro}
                   onClick={() =>
                     start(async () => {
                       await toggleAutomationAction(item.id, !item.enabled);
@@ -164,4 +187,14 @@ export function TemplateGrid() {
       </div>
     </section>
   );
+}
+
+function statusLabel(status: string) {
+  if (status === "QUEUED") return "Queued";
+  if (status === "RUNNING") return "Running";
+  if (status === "AWAITING_CONFIRMATION" || status === "WAITING") return "Waiting for approval";
+  if (status === "COMPLETED") return "Completed";
+  if (status === "FAILED") return "Failed";
+  if (status === "CANCELLED") return "Cancelled";
+  return status.replaceAll("_", " ").toLowerCase();
 }

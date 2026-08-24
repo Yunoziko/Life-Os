@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const [[projects, goals], billing, notifications, unread] = await Promise.all([
     getAssignableOptions(user.id),
     getBillingChrome(user.id),
-    listNotifications(user.id, 8),
+    listNotifications(user.id, { take: 8 }),
     unreadNotificationCount(user.id),
   ]);
 
@@ -31,6 +31,7 @@ export default async function DashboardLayout({
       unreadCount={unread}
       notifications={notifications.map((item) => ({
         id: item.id,
+        type: item.type,
         title: item.title,
         body: item.body,
         href: item.href,

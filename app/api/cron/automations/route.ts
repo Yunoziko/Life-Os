@@ -18,8 +18,8 @@ export async function GET(request: Request) {
     }
   }
 
-  const results = await tickDueAutomations(10);
-  return Response.json({ ok: true, results });
+  const results = await tickDueAutomations(25);
+  return Response.json({ ok: true, enqueued: results });
 }
 
 export async function POST(request: Request) {

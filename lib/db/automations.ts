@@ -70,6 +70,7 @@ export async function createAutomationRecord(input: {
       triggerType: input.triggerType,
       actionType: input.actionType,
       enabled: input.enabled ?? true,
+      timezone: input.schedule?.timeZone ?? "UTC",
       schedule: (input.schedule ?? undefined) as Prisma.InputJsonValue | undefined,
       eventType: input.eventType,
       actionConfig: input.actionConfig as Prisma.InputJsonValue,
@@ -86,6 +87,8 @@ export async function updateAutomationRecord(
     description?: string | null;
     enabled?: boolean;
     schedule?: AutomationSchedule | null;
+    timezone?: string;
+    pauseReason?: string | null;
     nextRunAt?: Date | null;
     lastRunAt?: Date | null;
   }
@@ -96,6 +99,8 @@ export async function updateAutomationRecord(
       name: data.name,
       description: data.description,
       enabled: data.enabled,
+      timezone: data.timezone,
+      pauseReason: data.pauseReason,
       schedule: data.schedule === undefined ? undefined : (data.schedule as Prisma.InputJsonValue),
       nextRunAt: data.nextRunAt,
       lastRunAt: data.lastRunAt,

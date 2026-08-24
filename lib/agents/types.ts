@@ -67,6 +67,7 @@ export type AgentObjectiveKind =
   | "habit_review"
   | "goal_checkin"
   | "project_checklist"
+  | "project_review"
   | "custom";
 
 export type WorkspaceEventType =
