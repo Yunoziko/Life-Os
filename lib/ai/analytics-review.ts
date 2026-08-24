@@ -69,7 +69,7 @@ export async function generateAnalyticsReview(input: {
   }
 
   const provider = getAIProvider();
-  const system = `You are LifeOS AI writing a private ${input.kind === "daily" ? "daily brief" : "weekly review"}.
+  const system = `You are AZIO AI writing a private ${input.kind === "daily" ? "daily brief" : "weekly review"}.
 Current local time: ${now.weekday}, ${now.date} ${now.time} (${now.timeZone}).
 Never invent data. Never mention API keys, IDs, or implementation details.`;
 

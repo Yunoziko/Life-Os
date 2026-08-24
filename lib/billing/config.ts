@@ -28,7 +28,7 @@ export const PRO_BENEFITS = [
   "Unlimited habits",
   "Advanced analytics",
   "More AI usage",
-  "Advanced LifeOS intelligence",
+  "Advanced AZIO intelligence",
   "External integrations",
 ] as const;
 
@@ -83,7 +83,7 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
   PRO: {
     id: "PRO",
     name: "Pro",
-    tagline: "Unlimited workspace, full LifeOS intelligence, and room to grow.",
+    tagline: "Unlimited workspace, full AZIO intelligence, and room to grow.",
     monthlyPaise: 49_900,
     annualPaise: 499_900,
     displayMonthly: "₹499/month",
@@ -100,7 +100,7 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
     highlights: [
       "Unlimited projects, goals, and habits",
       "Advanced analytics and patterns",
-      "Full LifeOS AI with higher limits",
+      "Full AZIO AI with higher limits",
       "Weekly AI review and daily brief",
       "All external integrations",
       "Ready for future automation",

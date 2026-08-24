@@ -63,7 +63,7 @@ export async function openRazorpayCheckout(session: CheckoutSession, onComplete?
     prefill: session.prefill,
     theme: { color: "#3f3a32" },
     handler: () => {
-      toast.message("Payment received. LifeOS will unlock Pro once Razorpay confirms it.");
+      toast.message("Payment received. AZIO will unlock Pro once Razorpay confirms it.");
       onComplete?.();
     },
     modal: {

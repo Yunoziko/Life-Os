@@ -30,7 +30,7 @@ export function UpgradeModal({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <p className="text-sm font-medium">Unlock LifeOS Pro</p>
+        <p className="text-sm font-medium">Unlock AZIO Pro</p>
         <ul className="grid gap-1.5 text-sm text-muted-foreground">
           {PRO_BENEFITS.map((item) => (
             <li key={item}>{item}</li>

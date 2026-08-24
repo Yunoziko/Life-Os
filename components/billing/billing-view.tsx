@@ -43,7 +43,7 @@ export function BillingView({
         <p className="text-xs text-muted-foreground">Current plan</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">{pro ? "Pro" : "Free"}</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">{pro ? "AZIO Pro" : "AZIO Free"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {pro ? PLAN_CATALOG.PRO.displayMonthly : PLAN_CATALOG.FREE.displayMonthly}
             </p>

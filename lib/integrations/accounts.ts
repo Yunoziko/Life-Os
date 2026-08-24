@@ -81,7 +81,7 @@ export async function upsertIntegrationAccount(
   if (!isSecretEncryptionConfigured()) {
     throw new IntegrationError(
       "config",
-      "LifeOS needs INTEGRATION_ENCRYPTION_KEY (or AUTH_SECRET) to store connection secrets."
+      "AZIO needs INTEGRATION_ENCRYPTION_KEY (or AUTH_SECRET) to store connection secrets."
     );
   }
 

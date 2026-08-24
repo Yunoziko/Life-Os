@@ -5,7 +5,7 @@ const idOrTitle = {
   type: "object",
   additionalProperties: false,
   properties: {
-    id: { type: "string", description: "Record id from LifeOS context or a previous tool result." },
+    id: { type: "string", description: "Record id from AZIO context or a previous tool result." },
     title: { type: "string", description: "Exact or close title if id is unknown." },
   },
 };
@@ -137,7 +137,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   {
     name: "get_recent_commits",
     description:
-      "Recent commits for a GitHub repository (owner/name). If repo is omitted, use a linked LifeOS project repo or the most recently pushed repository.",
+      "Recent commits for a GitHub repository (owner/name). If repo is omitted, use a linked AZIO project repo or the most recently pushed repository.",
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -164,7 +164,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   },
   {
     name: "create_task",
-    description: "Create one task. LifeOS will confirm before saving.",
+    description: "Create one task. AZIO will confirm before saving.",
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -204,7 +204,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   },
   {
     name: "create_goal",
-    description: "Create one goal. LifeOS will confirm before saving.",
+    description: "Create one goal. AZIO will confirm before saving.",
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -240,7 +240,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   },
   {
     name: "create_project",
-    description: "Create one project. LifeOS will confirm before saving.",
+    description: "Create one project. AZIO will confirm before saving.",
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -254,7 +254,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   },
   {
     name: "create_calendar_event",
-    description: "Schedule one calendar event. LifeOS will confirm before saving.",
+    description: "Schedule one calendar event. AZIO will confirm before saving.",
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -297,7 +297,7 @@ export const lifeOSTools: AIToolDefinition[] = [
   },
   {
     name: "create_learning_item",
-    description: "Add one course, book, or resource to Learning. LifeOS will confirm before saving.",
+    description: "Add one course, book, or resource to Learning. AZIO will confirm before saving.",
     parameters: {
       type: "object",
       additionalProperties: false,

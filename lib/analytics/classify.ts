@@ -25,7 +25,7 @@ export function classifyGoalMomentum(input: {
     return {
       status: "on_track",
       expected: null,
-      reason: "No target date. LifeOS only flags a stall after 21 days at 0%.",
+      reason: "No target date. AZIO only flags a stall after 21 days at 0%.",
     };
   }
 

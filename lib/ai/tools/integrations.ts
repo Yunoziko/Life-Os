@@ -101,6 +101,6 @@ export async function refreshCalendarIfConnected(ctx: ToolContext) {
   try {
     await ensureRecentCalendarSync(ctx.userId, ctx.timeZone);
   } catch {
-    // Keep calendar tools usable from LifeOS data even if Google is down.
+    // Keep calendar tools usable from AZIO data even if Google is down.
   }
 }

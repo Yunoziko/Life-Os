@@ -31,14 +31,14 @@ export default async function HomePage() {
 
       <main className="relative mx-auto flex min-h-[calc(100dvh-5.5rem)] w-full max-w-3xl flex-col items-center justify-center px-6 pb-24 text-center">
         <p className="mb-5 text-xs font-medium tracking-[0.22em] text-muted-foreground uppercase">
-          Personal operating system
+          AZIO
         </p>
         <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          A calmer way to run your life.
+          Your life, organized intelligently.
         </h1>
         <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">
-          Tasks, goals, notes, and habits in one quiet workspace — built to feel as considered as
-          the tools you already trust.
+          An intelligent personal operating system. Tasks, projects, goals, habits, calendar,
+          notes, AI, analytics, Gmail, Google Calendar, and GitHub — one command center.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <Link href="/signup" className={cn(buttonVariants({ size: "lg" }), "min-w-40")}>

@@ -9,11 +9,11 @@ async function githubFetch(userId: string, path: string) {
     headers: {
       Authorization: `Bearer ${account.accessToken}`,
       Accept: "application/vnd.github+json",
-      "User-Agent": "LifeOS",
+      "User-Agent": "AZIO",
       "X-GitHub-Api-Version": "2022-11-28",
     },
   }).catch((error) => {
-    throw new IntegrationError("network", "LifeOS couldn’t reach GitHub just then.", { cause: error });
+    throw new IntegrationError("network", "AZIO couldn’t reach GitHub just then.", { cause: error });
   });
 
   if (response.status === 401) {
@@ -23,12 +23,12 @@ async function githubFetch(userId: string, path: string) {
   if (response.status === 403) {
     const remaining = response.headers.get("x-ratelimit-remaining");
     if (remaining === "0") {
-      throw new IntegrationError("rate_limit", "GitHub asked LifeOS to wait. Try again in a minute.");
+      throw new IntegrationError("rate_limit", "GitHub asked AZIO to wait. Try again in a minute.");
     }
-    throw new IntegrationError("permission", "LifeOS doesn’t have permission for that GitHub data yet.");
+    throw new IntegrationError("permission", "AZIO doesn’t have permission for that GitHub data yet.");
   }
   if (response.status === 404) {
-    throw new IntegrationError("provider", "That GitHub repository wasn’t found or isn’t visible to LifeOS.");
+    throw new IntegrationError("provider", "That GitHub repository wasn’t found or isn’t visible to AZIO.");
   }
   if (!response.ok) {
     throw new IntegrationError("provider", "GitHub is unavailable right now.");

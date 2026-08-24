@@ -17,7 +17,7 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { getMomentumSnapshot } from "@/lib/db/analytics";
 
 export const metadata = {
-  title: "Overview",
+  title: "AZIO Dashboard",
 };
 
 export default async function DashboardPage() {

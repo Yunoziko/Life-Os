@@ -13,7 +13,7 @@ function encode(event: ChatStreamEvent) {
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return new Response(encode({ type: "error", error: "Please sign in to use LifeOS AI.", code: "unauthorized" }), {
+    return new Response(encode({ type: "error", error: "Please sign in to use AZIO AI.", code: "unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
     });
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   });
 
   if (!user) {
-    return new Response(encode({ type: "error", error: "Please sign in to use LifeOS AI.", code: "unauthorized" }), {
+    return new Response(encode({ type: "error", error: "Please sign in to use AZIO AI.", code: "unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
     });

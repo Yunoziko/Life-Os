@@ -42,7 +42,7 @@ export function AIWorkspace({
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ConversationMessage[]>(initialMessages ?? []);
   const [conversationId, setConversationId] = useState(activeId);
-  const [title, setTitle] = useState(initialTitle ?? "LifeOS AI");
+  const [title, setTitle] = useState(initialTitle ?? "AZIO AI");
   const [thinking, setThinking] = useState(false);
   const [streaming, setStreaming] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +201,10 @@ export function AIWorkspace({
               <Menu />
             </Button>
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold tracking-tight">LifeOS AI</h1>
-              <p className="text-sm text-muted-foreground">Your personal operating system.</p>
+              <h1 className="text-lg font-semibold tracking-tight">AZIO AI</h1>
+              <p className="text-sm text-muted-foreground">
+                AZIO understands your work, goals and routines.
+              </p>
             </div>
           </div>
           <ContextIndicator sources={sources} />
@@ -212,7 +214,7 @@ export function AIWorkspace({
           {empty ? (
             <div className="mx-auto flex min-h-full max-w-2xl flex-col justify-center py-10">
               <p className="text-3xl font-semibold tracking-tight">{greeting}.</p>
-              <p className="mt-2 text-muted-foreground">What would you like to accomplish today?</p>
+              <p className="mt-2 text-muted-foreground">Ask AZIO what you’d like to accomplish today.</p>
               {!configured ? (
                 <p className="mt-4 max-w-md text-sm text-muted-foreground">
                   The assistant is ready. Add an API key on the server to start talking with your workspace.

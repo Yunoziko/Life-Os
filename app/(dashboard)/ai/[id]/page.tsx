@@ -5,7 +5,7 @@ import { getConversation, listConversations } from "@/lib/db/ai";
 import { greetingForHour, firstName } from "@/lib/utils/greeting";
 import { AIWorkspace } from "@/components/ai/ai-workspace";
 
-export const metadata = { title: "LifeOS AI" };
+export const metadata = { title: "AZIO AI" };
 
 export default async function AIConversationPage({
   params,

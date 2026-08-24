@@ -56,7 +56,7 @@ export function AnalyticsView({
         <EmptyState
           icon={BarChart3}
           title="Your story is just getting started."
-          description="Use LifeOS for a while and we'll show you meaningful patterns. Nothing here is invented."
+          description="Your life, organized intelligently. Use AZIO for a while and we'll show you meaningful patterns — nothing here is invented."
         />
       </div>
     );
@@ -66,7 +66,7 @@ export function AnalyticsView({
     <div className="space-y-6">
       <AnalyticsFilters range={rangeId} from={analytics.range.fromParam} to={analytics.range.toParam} />
       <p className="text-xs leading-5 text-muted-foreground">
-        LifeOS analytics are generated from the data you choose to keep in LifeOS and the integrations you
+        AZIO Analytics are generated from the data you choose to keep in AZIO and the integrations you
         connect. Showing {analytics.range.label.toLowerCase()}.
       </p>
       <OverviewGrid analytics={analytics} />
@@ -88,7 +88,7 @@ export function AnalyticsView({
         </>
       ) : (
         <ProGate feature="ADVANCED_ANALYTICS" title="Advanced analytics">
-          Time analysis, GitHub, email, patterns, and longer trends are part of LifeOS Pro.
+          Time analysis, GitHub, email, patterns, and longer trends are part of AZIO Pro.
         </ProGate>
       )}
       <div id="momentum">
@@ -189,7 +189,7 @@ function HabitsBlock({ analytics, advanced }: { analytics: SerializedAnalytics; 
       ) : advanced ? (
         <p className="text-sm text-muted-foreground">No scheduled habits in this window yet.</p>
       ) : (
-        <p className="text-sm text-muted-foreground">The activity heatmap is part of LifeOS Pro.</p>
+        <p className="text-sm text-muted-foreground">The activity heatmap is part of AZIO Pro.</p>
       )}
     </SectionCard>
   );
@@ -277,8 +277,8 @@ function CalendarBlock({ analytics }: { analytics: SerializedAnalytics }) {
     <SectionCard title="Time analysis">
       <p className="mb-4 text-xs leading-5 text-muted-foreground">
         {calendar.connectedGoogle
-          ? "Includes LifeOS events and Google Calendar events already synced into LifeOS."
-          : "Using LifeOS calendar data. Connect Google Calendar in Settings to include that schedule."}{" "}
+          ? "Includes AZIO events and Google Calendar events already synced into AZIO."
+          : "Using AZIO calendar data. Connect Google Calendar in Settings to include that schedule."}{" "}
         Meetings are timed events whose title includes words like meet, call, or sync.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -387,7 +387,7 @@ function PatternsBlock({ analytics }: { analytics: SerializedAnalytics }) {
     <SectionCard title="Patterns">
       {analytics.patterns.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Keep using LifeOS. We&apos;ll surface patterns as more data becomes available.
+          Keep using AZIO. We&apos;ll surface patterns as more data becomes available.
         </p>
       ) : (
         <ul className="space-y-3">
@@ -405,7 +405,7 @@ function PatternsBlock({ analytics }: { analytics: SerializedAnalytics }) {
 function MomentumBlock({ analytics }: { analytics: SerializedAnalytics }) {
   const momentum = analytics.momentum;
   return (
-    <SectionCard title="LifeOS Momentum">
+    <SectionCard title="AZIO Momentum">
       <p className="text-xs leading-5 text-muted-foreground">{momentum.formula}</p>
       <p className="mt-4 text-4xl font-semibold tracking-tight tabular-nums">
         {momentum.score === null ? "—" : momentum.score}

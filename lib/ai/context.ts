@@ -268,7 +268,7 @@ export async function buildLifeOSContext(
     );
 
     const promptBlock = [
-      "Authorized LifeOS snapshot for this user only. Treat as ground truth. Do not invent records.",
+      "Authorized AZIO snapshot for this user only. Treat as ground truth. Do not invent records.",
       "IDs are for tool calls only — never show them to the user.",
       integrationStatusPrompt(integrations),
       JSON.stringify(snapshot),

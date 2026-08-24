@@ -25,13 +25,13 @@ export default async function IntegrationsSettingsPage({
     <div className="space-y-8">
       <PageHeader
         title="Integrations"
-        description="Connect the accounts LifeOS should read from. You can disconnect at any time."
+        description="Connect the accounts AZIO should read from. You can disconnect at any time."
       />
       <SettingsNav current="integrations" />
 
       <section className="rounded-2xl border border-border/70 bg-muted/30 p-5">
         <p className="text-sm leading-6 text-muted-foreground">
-          LifeOS only accesses data required for the features you enable. Tokens stay on the server
+          AZIO only accesses data required for the features you enable. Tokens stay on the server
           and are never sent to the browser. Google Calendar can read and write events; Gmail is
           read-only; GitHub is read-only.
         </p>

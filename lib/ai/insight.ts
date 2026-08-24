@@ -24,7 +24,7 @@ export function deriveDashboardInsight(data: DashboardData): DashboardInsight {
   if (signalCount < 2 && !data.hasAnyData) {
     return {
       source: "insufficient",
-      body: "Once you add a few tasks and goals, LifeOS will start giving you personalized insights.",
+      body: "Once you add a few tasks and goals, AZIO will start giving you personalized insights.",
     };
   }
 
@@ -108,7 +108,7 @@ export function deriveDashboardInsight(data: DashboardData): DashboardInsight {
   if (signalCount < 2) {
     return {
       source: "insufficient",
-      body: "Once you add a few tasks and goals, LifeOS will start giving you personalized insights.",
+      body: "Once you add a few tasks and goals, AZIO will start giving you personalized insights.",
     };
   }
 

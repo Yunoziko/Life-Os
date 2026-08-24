@@ -1,5 +1,5 @@
 export const appConfig = {
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "LifeOS",
+  name: process.env.NEXT_PUBLIC_APP_NAME ?? "AZIO",
   url: process.env.AUTH_URL ?? "http://localhost:3000",
 } as const;
 

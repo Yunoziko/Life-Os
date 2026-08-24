@@ -577,7 +577,7 @@ function ItemRow({ item, timezone }: { item: CalendarItem; timezone: string }) {
         <p className="truncate text-sm font-medium">{item.title}</p>
         <p className="text-xs text-muted-foreground">
           {item.kind.toUpperCase()}
-          {item.source === "GOOGLE" ? " · Google" : item.kind === "event" ? " · LifeOS" : ""}
+          {item.source === "GOOGLE" ? " · Google" : item.kind === "event" ? " · AZIO" : ""}
           {item.allDay || !item.startAt ? " · All day" : ` · ${formatTime(new Date(item.startAt), timezone)}`}
           {item.projectName ? ` · ${item.projectName}` : ""}
           {item.goalTitle ? ` · ${item.goalTitle}` : ""}

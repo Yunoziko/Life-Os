@@ -23,12 +23,12 @@ export function ContextIndicator({ sources }: { sources: ContextSource[] }) {
       <PopoverTrigger
         className="inline-flex items-center rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted"
       >
-        Using your LifeOS context
+        Using your AZIO context
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64">
         <PopoverHeader>
           <PopoverTitle>Considered for this reply</PopoverTitle>
-          <PopoverDescription>LifeOS looks at your workspace, not the open internet.</PopoverDescription>
+          <PopoverDescription>AZIO looks at your workspace, not the open internet.</PopoverDescription>
         </PopoverHeader>
         <ul className="grid grid-cols-2 gap-1.5">
           {list.map((source) => (

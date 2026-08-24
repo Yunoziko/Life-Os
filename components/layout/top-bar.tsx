@@ -74,7 +74,7 @@ export function TopBar({
         <PopoverContent align="end" className="w-80">
           <p className="text-sm font-medium">Notifications</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            You’re all caught up. LifeOS will surface reminders here as your workspace fills in.
+            You’re all caught up. AZIO will surface reminders here as your workspace fills in.
           </p>
         </PopoverContent>
       </Popover>

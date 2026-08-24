@@ -23,7 +23,7 @@ export function describeAction(tool: string, payload: AIActionPayload) {
   const title =
     str(payload.title) ||
     str(payload.name) ||
-    "LifeOS change";
+    "AZIO change";
 
   const due = [str(payload.dueDate) ?? str(payload.date), str(payload.dueTime) ?? str(payload.startTime)]
     .filter(Boolean)
@@ -57,7 +57,7 @@ export function describeAction(tool: string, payload: AIActionPayload) {
   };
 
   return {
-    heading: typeLabel[tool] ?? "LifeOS wants to make a change",
+    heading: typeLabel[tool] ?? "AZIO wants to make a change",
     title,
     summary: lines.slice(1).join(" · ") || title,
   };

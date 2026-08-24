@@ -40,10 +40,10 @@ export function PricingView({
 
       <main className="relative mx-auto w-full max-w-5xl px-6 pb-24 pt-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-4 text-xs font-medium tracking-[0.22em] text-muted-foreground uppercase">Pricing</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Choose how LifeOS grows with you.</h1>
+          <p className="mb-4 text-xs font-medium tracking-[0.22em] text-muted-foreground uppercase">AZIO</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">AZIO</h1>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            Start free. Upgrade when you want unlimited workspace depth, advanced analytics, and more LifeOS AI.
+            Simple pricing. Powerful life management.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export function PricingView({
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Billing isn’t configured on this server yet. You can still use LifeOS on the Free plan.
+                      Billing isn’t configured on this server yet. You can still use AZIO on the Free plan.
                     </p>
                   )
                 ) : (
@@ -102,7 +102,7 @@ export function PricingView({
         </div>
 
         <section className="mx-auto mt-16 max-w-2xl rounded-3xl border border-border/70 bg-card/80 p-6">
-          <h2 className="text-sm font-medium">LifeOS Pro</h2>
+          <h2 className="text-sm font-medium">AZIO Pro</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">₹499/month</p>
           <ul className="mt-4 grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
             {benefits.map((item) => (

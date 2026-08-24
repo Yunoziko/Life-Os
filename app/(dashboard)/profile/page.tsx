@@ -12,7 +12,7 @@ export default async function ProfilePage() {
     <div>
       <PageHeader
         title="Profile"
-        description="How LifeOS addresses you across the workspace."
+        description="How AZIO addresses you across the workspace."
       />
       <SettingsNav current="profile" />
       <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">

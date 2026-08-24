@@ -36,7 +36,7 @@ function notesOf(value: RazorpayEntity["notes"]): Record<string, string> {
 
 function asSubscription(entity: RazorpayEntity): ProviderSubscription {
   if (!entity.id) {
-    throw new BillingError("provider", "LifeOS couldn’t read that Razorpay subscription.");
+    throw new BillingError("provider", "AZIO couldn’t read that Razorpay subscription.");
   }
   return {
     id: entity.id,
@@ -58,7 +58,7 @@ async function razorpayFetch(path: string, init?: RequestInit) {
       ...(init?.headers ?? {}),
     },
   }).catch((error) => {
-    throw new BillingError("network", "LifeOS couldn’t reach Razorpay just then.", { cause: error });
+    throw new BillingError("network", "AZIO couldn’t reach Razorpay just then.", { cause: error });
   });
 
   const json = (await response.json().catch(() => null)) as
@@ -67,7 +67,7 @@ async function razorpayFetch(path: string, init?: RequestInit) {
     | null;
 
   if (!response.ok) {
-    throw new BillingError("provider", "LifeOS couldn’t complete that billing request. Try again in a moment.");
+    throw new BillingError("provider", "AZIO couldn’t complete that billing request. Try again in a moment.");
   }
 
   return json as RazorpayEntity;
@@ -109,14 +109,14 @@ export class RazorpayBillingProvider implements BillingProvider {
       const customer = await razorpayFetch("/customers", {
         method: "POST",
         body: JSON.stringify({
-          name: input.name?.trim() || "LifeOS",
+          name: input.name?.trim() || "AZIO",
           email: input.email,
           fail_existing: 0,
           notes: { lifeos_user_id: input.userId },
         }),
       });
       if (!customer.id) {
-        throw new BillingError("provider", "LifeOS couldn’t create a Razorpay customer.");
+        throw new BillingError("provider", "AZIO couldn’t create a Razorpay customer.");
       }
       customerId = customer.id;
     }

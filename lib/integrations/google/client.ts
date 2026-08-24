@@ -36,7 +36,7 @@ async function authorizedFetch(
       },
     });
   } catch (error) {
-    throw new IntegrationError("network", "LifeOS couldn’t reach Google just then.", { cause: error });
+    throw new IntegrationError("network", "AZIO couldn’t reach Google just then.", { cause: error });
   }
 
   if (response.status === 401) {
@@ -65,10 +65,10 @@ async function authorizedFetch(
   }
 
   if (response.status === 403) {
-    throw new IntegrationError("permission", "LifeOS doesn’t have permission for that yet.");
+    throw new IntegrationError("permission", "AZIO doesn’t have permission for that yet.");
   }
   if (response.status === 429) {
-    throw new IntegrationError("rate_limit", "Google asked LifeOS to wait. Try again in a minute.");
+    throw new IntegrationError("rate_limit", "Google asked AZIO to wait. Try again in a minute.");
   }
   if (!response.ok) {
     throw new IntegrationError("provider", "Google is unavailable right now.");

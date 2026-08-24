@@ -42,7 +42,7 @@ export const primaryNav: NavItem[] = [
 
 export const assistantItem: NavItem = {
   href: "/ai",
-  label: "LifeOS AI",
+  label: "AZIO AI",
   icon: Sparkles,
 };
 

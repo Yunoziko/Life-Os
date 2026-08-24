@@ -10,7 +10,7 @@ export function AIComposer({
   onChange,
   onSubmit,
   disabled,
-  placeholder = "Ask LifeOS…",
+  placeholder = "Ask AZIO…",
 }: {
   value: string;
   onChange: (value: string) => void;

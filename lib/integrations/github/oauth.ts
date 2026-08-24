@@ -58,7 +58,7 @@ export async function exchangeGitHubCode(code: string): Promise<IntegrationToken
     headers: {
       Authorization: `Bearer ${json.access_token}`,
       Accept: "application/vnd.github+json",
-      "User-Agent": "LifeOS",
+      "User-Agent": "AZIO",
     },
   });
   const profile = user.ok ? ((await user.json()) as { login?: string }) : {};

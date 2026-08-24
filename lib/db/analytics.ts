@@ -622,7 +622,7 @@ export async function getMomentumSnapshot(userId: string, timeZone: string, week
   const insight =
     analytics.patterns[0]?.body ??
     (analytics.momentum.score === null
-      ? "Use LifeOS for a while and momentum will have something to stand on."
+      ? "Use AZIO for a while and momentum will have something to stand on."
       : `Momentum is ${analytics.momentum.score} this week.`);
   return {
     score: analytics.momentum.score,

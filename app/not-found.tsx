@@ -11,7 +11,7 @@ export default function NotFound() {
         The route may have moved, or it hasn’t been built yet.
       </p>
       <Link href="/dashboard" className={cn(buttonVariants(), "mt-6")}>
-        Back to LifeOS
+        Back to AZIO
       </Link>
     </div>
   );

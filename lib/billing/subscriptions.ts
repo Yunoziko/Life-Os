@@ -46,7 +46,7 @@ export async function startProCheckout(input: {
 
   const plan = await getUserPlan(input.userId);
   if (plan === "PRO") {
-    throw new BillingError("invalid", "You’re already on LifeOS Pro.");
+    throw new BillingError("invalid", "You’re already on AZIO Pro.");
   }
 
   const provider = getBillingProvider();
@@ -86,9 +86,9 @@ export async function startProCheckout(input: {
     plan: "PRO",
     interval: input.interval,
     amountLabel: input.interval === "ANNUAL" ? definition.displayAnnual : definition.displayMonthly,
-    name: "LifeOS Pro",
+    name: "AZIO Pro",
     description:
-      input.interval === "ANNUAL" ? "LifeOS Pro · billed yearly" : "LifeOS Pro · billed monthly",
+      input.interval === "ANNUAL" ? "AZIO Pro · billed yearly" : "AZIO Pro · billed monthly",
     prefill: { name: input.name ?? undefined, email: input.email },
   };
 }

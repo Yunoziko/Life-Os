@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { AnalyticsView, serializeAnalytics } from "@/components/analytics/analytics-view";
 import { canUseFeature } from "@/lib/billing/entitlements";
 
-export const metadata = { title: "Your Life" };
+export const metadata = { title: "AZIO Analytics" };
 
 export default async function AnalyticsPage({
   searchParams,
@@ -26,7 +26,7 @@ export default async function AnalyticsPage({
 
   return (
     <div>
-      <PageHeader title="Your Life" description="Understand your progress, patterns and momentum." />
+      <PageHeader title="AZIO Analytics" description="Understand your progress, patterns and momentum." />
       <AnalyticsView
         analytics={serializeAnalytics(analytics)}
         timezone={timezone}

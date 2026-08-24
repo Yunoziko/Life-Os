@@ -86,7 +86,7 @@ export function GlobalSearch() {
     <CommandDialog
       open={searchOpen}
       onOpenChange={handleOpenChange}
-      title="Search LifeOS"
+      title="Search AZIO"
       description="Search tasks, goals, projects, notes, and events."
     >
       <CommandInput

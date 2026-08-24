@@ -4,7 +4,7 @@ import { PricingView } from "@/components/billing/pricing-view";
 
 export const metadata = {
   title: "Pricing",
-  description: "LifeOS Free and Pro — a quieter operating system for your life.",
+  description: "AZIO — Simple pricing. Powerful life management.",
 };
 
 export default async function PricingPage() {

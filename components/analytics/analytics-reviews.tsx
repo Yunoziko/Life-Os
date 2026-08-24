@@ -93,7 +93,7 @@ function ReviewPanel({
       <p className="text-sm leading-6 text-muted-foreground">{description}</p>
       {!configured ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          LifeOS AI isn’t connected yet. Add an API key on the server to generate this.
+          AZIO AI isn’t connected yet. Add an API key on the server to generate this.
         </p>
       ) : (
         <Button type="button" className="mt-4" size="sm" disabled={pending} onClick={() => void onGenerate()}>

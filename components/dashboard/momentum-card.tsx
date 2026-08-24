@@ -13,7 +13,7 @@ export function MomentumCard({
   insight: string;
 }) {
   return (
-    <SectionCard title="Your Momentum">
+    <SectionCard title="AZIO Momentum">
       <p className="text-3xl font-semibold tracking-tight tabular-nums">{score === null ? "—" : score}</p>
       <p className="mt-1 text-xs text-muted-foreground">
         {delta === null

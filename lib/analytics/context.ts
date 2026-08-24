@@ -73,7 +73,7 @@ export function buildLifeAnalyticsContext(analytics: LifeAnalytics) {
 }
 
 export function weeklyReviewPrompt() {
-  return `Write a weekly review from the authorized LifeOS analytics snapshot only.
+  return `Write a weekly review from the authorized AZIO analytics snapshot only.
 
 Cover, in short markdown:
 - What went well
@@ -92,7 +92,7 @@ Rules:
 }
 
 export function dailyBriefPrompt() {
-  return `Write a daily brief from the authorized LifeOS snapshot only.
+  return `Write a daily brief from the authorized AZIO snapshot only.
 
 Summarize today's tasks, calendar, habits, and any goal that is at risk or behind.
 If external sources are connected, mention them only when the snapshot includes them.

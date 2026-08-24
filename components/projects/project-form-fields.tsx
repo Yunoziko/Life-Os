@@ -30,7 +30,7 @@ export function ProjectFormFields({
           id="project-name"
           name="name"
           defaultValue={values?.name}
-          placeholder="LifeOS"
+          placeholder="AZIO"
           required
           autoFocus={autoFocus}
           maxLength={160}

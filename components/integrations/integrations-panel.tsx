@@ -97,7 +97,7 @@ export function IntegrationsPanel({
       toast.error(result.error);
       return;
     }
-    toast.success("Disconnected. Your LifeOS data is unchanged.");
+    toast.success("Disconnected. Your AZIO data is unchanged.");
     setManaging(null);
     router.refresh();
   }
@@ -251,8 +251,8 @@ export function IntegrationsPanel({
                   </div>
                 </dl>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  LifeOS only accesses data required for the features you enable. Disconnecting removes
-                  access tokens. It does not delete your LifeOS tasks, notes, or events.
+                  AZIO only accesses data required for the features you enable. Disconnecting removes
+                  access tokens. It does not delete your AZIO tasks, notes, or events.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Link href={START_HREF[managing.slug]} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>

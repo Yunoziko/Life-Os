@@ -77,7 +77,7 @@ function UpcomingGroup({
                       ? "TASK · "
                       : event.source === "GOOGLE"
                         ? "GOOGLE · "
-                        : "LIFEOS · "}
+                        : "AZIO · "}
                     {event.allDay
                       ? `${formatShortDate(event.startAt, timezone)} · All day`
                       : `${formatShortDate(event.startAt, timezone)} · ${formatTime(event.startAt, timezone)}`}

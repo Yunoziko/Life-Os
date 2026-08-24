@@ -14,12 +14,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "AZIO is an intelligent personal operating system for managing tasks, goals, projects, habits, calendar, notes and more.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appConfig.url),
+  applicationName: "AZIO",
   title: {
-    default: appConfig.name,
-    template: `%s · ${appConfig.name}`,
+    default: "AZIO — Your life, organized intelligently.",
+    template: `%s · AZIO`,
   },
-  description: "An intelligent workspace for the rest of your life.",
+  description,
+  openGraph: {
+    title: "AZIO — Your life, organized intelligently.",
+    description,
+    siteName: "AZIO",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "AZIO — Your life, organized intelligently.",
+    description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

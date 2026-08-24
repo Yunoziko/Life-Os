@@ -52,7 +52,7 @@ export function ActionCard({
       )}
     >
       <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-        {waiting ? "LifeOS wants to" : current.status === "executed" ? "Applied" : current.status === "cancelled" ? "Cancelled" : "Couldn’t apply"}
+        {waiting ? "AZIO wants to" : current.status === "executed" ? "Applied" : current.status === "cancelled" ? "Cancelled" : "Couldn’t apply"}
       </p>
       <p className="mt-1 text-sm font-medium">{copy.heading}</p>
       <p className="mt-0.5 text-sm text-foreground">{copy.title}</p>

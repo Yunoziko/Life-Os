@@ -10,7 +10,7 @@ import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 
 function friendly(error: unknown) {
   if (error instanceof BillingError) return error.message;
-  return "LifeOS couldn’t complete that billing request. Try again in a moment.";
+  return "AZIO couldn’t complete that billing request. Try again in a moment.";
 }
 
 export async function startProCheckoutAction(

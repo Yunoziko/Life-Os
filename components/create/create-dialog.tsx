@@ -338,7 +338,7 @@ function CreateFields({
         id="entity-title"
         name="title"
         label="Title"
-        placeholder={type === "note" ? "Ideas for Sunday" : "Ship LifeOS foundation"}
+        placeholder={type === "note" ? "Ideas for Sunday" : "Ship AZIO foundation"}
       />
 
       {type === "note" ? (

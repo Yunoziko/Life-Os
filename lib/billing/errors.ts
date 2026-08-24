@@ -121,19 +121,19 @@ export const UPGRADE_COPY: Record<FeatureKey, { title: string; body: string }> =
     body: "Free includes 10 active habits. Pro lets you track as many as you need.",
   },
   AI_MESSAGES: {
-    title: "Unlock more LifeOS AI",
+    title: "Unlock more AZIO AI",
     body: "You’ve used this month’s Free AI allowance. Pro raises the limit and unlocks weekly reviews.",
   },
   ADVANCED_ANALYTICS: {
     title: "Unlock advanced analytics",
-    body: "Patterns, heatmaps, and deeper trends are part of LifeOS Pro.",
+    body: "Patterns, heatmaps, and deeper trends are part of AZIO Pro.",
   },
   INTEGRATIONS: {
     title: "Unlock more integrations",
     body: "Free includes one connected account. Pro opens Google Calendar, Gmail, and GitHub together.",
   },
   AI_WEEKLY_REVIEW: {
-    title: "Unlock LifeOS intelligence",
+    title: "Unlock AZIO intelligence",
     body: "Weekly reviews and daily briefs are included with Pro.",
   },
 };

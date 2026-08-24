@@ -19,10 +19,10 @@ export function Logo({
       )}
     >
       <span className="flex size-7 items-center justify-center rounded-lg bg-foreground text-[13px] font-semibold tracking-tight text-background">
-        L
+        A
       </span>
       {!compact && (
-        <span className="text-[15px] font-semibold tracking-tight text-foreground">LifeOS</span>
+        <span className="text-[15px] font-semibold tracking-tight text-foreground">AZIO</span>
       )}
     </Link>
   );

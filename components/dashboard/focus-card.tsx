@@ -13,7 +13,7 @@ export function FocusCard({ focus }: { focus: DashboardFocus | null }) {
       {!focus ? (
         <SectionEmpty
           title="No active focus"
-          description="Choose a goal or project and LifeOS will keep it in view."
+          description="Choose a goal or project and AZIO will keep it in view."
           action={<CreateTrigger type="goal" size="sm">Create a goal</CreateTrigger>}
         />
       ) : (

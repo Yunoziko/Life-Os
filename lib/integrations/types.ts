@@ -42,12 +42,12 @@ export const INTEGRATION_CATALOG: Record<
 > = {
   "google-calendar": {
     name: "Google Calendar",
-    description: "Sync your schedule with LifeOS.",
+    description: "Sync your schedule with AZIO.",
     permissions: ["Read calendar events", "Create calendar events", "Update calendar events"],
   },
   gmail: {
     name: "Gmail",
-    description: "Let LifeOS search recent mail when you ask.",
+    description: "Let AZIO search recent mail when you ask.",
     permissions: ["Read email metadata and snippets"],
   },
   github: {

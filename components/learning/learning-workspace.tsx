@@ -208,7 +208,7 @@ export function LearningWorkspace({
           <DialogHeader>
             <DialogTitle>Remove this from Learning?</DialogTitle>
             <DialogDescription>
-              {item.title} will be deleted. Linked goals and projects stay in LifeOS.
+              {item.title} will be deleted. Linked goals and projects stay in AZIO.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

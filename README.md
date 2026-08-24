@@ -1,6 +1,8 @@
-# LifeOS
+# AZIO
 
-An AI-powered personal operating system. This repository is the production foundation: authentication, the application shell, dashboard, command palette, global search, and a PostgreSQL schema that the rest of the product can grow on.
+AZIO is an intelligent personal operating system. Your life, organized intelligently.
+
+This repository is the production foundation: authentication, the application shell, dashboard, command palette, global search, and a PostgreSQL schema that the rest of the product can grow on.
 
 ## Stack
 
@@ -89,7 +91,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Razorpay billing
 
-LifeOS uses **Razorpay Subscriptions**, not Stripe. The app runs locally on the Free plan without Razorpay credentials.
+AZIO uses **Razorpay Subscriptions**, not Stripe. The app runs locally on the Free plan without Razorpay credentials.
 
 ### Plans
 
@@ -105,8 +107,8 @@ Plan IDs and prices sent by the browser are ignored. The server maps “Upgrade 
 
 1. Create a Razorpay account and switch to **Test Mode**.
 2. Dashboard → **Subscriptions** → **Plans** → create:
-   - LifeOS Pro monthly, INR 499, billing period monthly
-   - LifeOS Pro annual, INR 4999, billing period yearly
+   - AZIO Pro monthly, INR 499, billing period monthly
+   - AZIO Pro annual, INR 4999, billing period yearly
 3. Copy the plan IDs into `.env`:
 
 ```bash
@@ -136,7 +138,7 @@ Dashboard → **Webhooks** (test mode) → add that URL with the subscription an
 - `subscription.paused`
 - `payment.failed`
 
-Copy the webhook secret into `RAZORPAY_WEBHOOK_SECRET`. LifeOS verifies `X-Razorpay-Signature` with HMAC SHA-256 of the **raw** body.
+Copy the webhook secret into `RAZORPAY_WEBHOOK_SECRET`. AZIO verifies `X-Razorpay-Signature` with HMAC SHA-256 of the **raw** body.
 
 ### Local webhook testing
 
@@ -156,4 +158,4 @@ Use live Razorpay keys, live plan IDs, and a HTTPS webhook URL. Keep `RAZORPAY_K
 
 ### Account deletion
 
-LifeOS does not delete accounts in this release. If deletion is added later, `cancelPaidSubscriptionsForDeletedUser()` must run first so an active Razorpay subscription is not left charging.
+AZIO does not delete accounts in this release. If deletion is added later, `cancelPaidSubscriptionsForDeletedUser()` must run first so an active Razorpay subscription is not left charging.

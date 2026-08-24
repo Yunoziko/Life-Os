@@ -8,7 +8,7 @@ export const MOMENTUM_WEIGHTS = {
 } as const;
 
 export const MOMENTUM_FORMULA =
-  "LifeOS Momentum is a workspace pulse, not a scientific score. When every pillar has data it is 30% tasks, 30% goals, 25% habits, and 15% projects. Missing pillars are omitted and the remaining weights are renormalized.";
+  "AZIO Momentum is a workspace pulse, not a scientific score. When every pillar has data it is 30% tasks, 30% goals, 25% habits, and 15% projects. Missing pillars are omitted and the remaining weights are renormalized.";
 
 function clampScore(value: number) {
   return Math.min(100, Math.max(0, Math.round(value)));

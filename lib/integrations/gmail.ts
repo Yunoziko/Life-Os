@@ -13,7 +13,7 @@ export async function searchGmailSafe(userId: string, query: string): Promise<Gm
 
   const trimmed = query.trim().slice(0, 200);
   if (trimmed.length < 2) {
-    throw new IntegrationError("permission", "Give LifeOS a search to look for in Gmail.");
+    throw new IntegrationError("permission", "Give AZIO a search to look for in Gmail.");
   }
 
   const cache = getCache();

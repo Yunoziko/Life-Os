@@ -21,7 +21,7 @@ export default async function BillingSettingsPage({
     <div>
       <PageHeader
         title="Billing"
-        description="Your plan, usage, and LifeOS Pro subscription."
+        description="Your plan, usage, and AZIO Pro subscription."
         action={
           <Link href="/pricing" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
             View pricing

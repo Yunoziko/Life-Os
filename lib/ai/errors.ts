@@ -11,16 +11,16 @@ export type AIErrorCode =
   | "unauthorized";
 
 const MESSAGES: Record<AIErrorCode, string> = {
-  missing_key: "LifeOS AI isn’t connected yet. Add an API key on the server and try again.",
+  missing_key: "AZIO AI isn’t connected yet. Add an API key on the server and try again.",
   provider: "The assistant is unavailable right now. Try again in a moment.",
   timeout: "The assistant took too long to respond. Try again.",
   rate_limit: "You’ve reached the assistant limit for now. Try again in a minute.",
   quota: "You’ve used this month’s AI allowance. Upgrade to Pro for a higher limit.",
-  upgrade_required: "That LifeOS intelligence feature is part of Pro.",
+  upgrade_required: "That AZIO intelligence feature is part of Pro.",
   invalid_args: "That request couldn’t be understood. Try rephrasing it.",
-  database: "LifeOS couldn’t read your workspace just then. Try again.",
-  malformed: "The assistant returned something LifeOS couldn’t use. Try again.",
-  unauthorized: "Please sign in to use LifeOS AI.",
+  database: "AZIO couldn’t read your workspace just then. Try again.",
+  malformed: "The assistant returned something AZIO couldn’t use. Try again.",
+  unauthorized: "Please sign in to use AZIO AI.",
 };
 
 export class AIError extends Error {

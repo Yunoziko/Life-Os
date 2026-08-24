@@ -62,12 +62,12 @@ export function LoginForm({
           </p>
         ) : null}
         <Button type="submit" className="h-10 w-full" disabled={pending}>
-          {pending ? "Signing in…" : "Sign in"}
+          {pending ? "Signing in…" : "Continue to AZIO"}
         </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        New to LifeOS?{" "}
+        New to AZIO?{" "}
         <Link href="/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
           Create an account
         </Link>

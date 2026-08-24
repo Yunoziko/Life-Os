@@ -60,7 +60,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         ) : null}
         <Button type="submit" className="h-10 w-full" disabled={pending}>
-          {pending ? "Creating account…" : "Create account"}
+          {pending ? "Creating account…" : "Continue to AZIO"}
         </Button>
       </form>
 

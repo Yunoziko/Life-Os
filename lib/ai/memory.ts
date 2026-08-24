@@ -1,7 +1,7 @@
 /**
  * Future long-term memory — not used in this phase.
  * Keep preferences, personal instructions, and important facts
- * separate from raw LifeOS records (tasks, notes, etc.).
+ * separate from raw AZIO records (tasks, notes, etc.).
  */
 
 export type MemoryKind = "preference" | "instruction" | "fact";

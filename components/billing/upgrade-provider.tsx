@@ -27,7 +27,7 @@ export function UpgradeProvider({ children }: { children: React.ReactNode }) {
       {children}
       <UpgradeModal
         open={feature !== null}
-        title={feature ? UPGRADE_COPY[feature].title : "Unlock LifeOS Pro"}
+        title={feature ? UPGRADE_COPY[feature].title : "Unlock AZIO Pro"}
         description={feature ? UPGRADE_COPY[feature].body : "Get advanced AI, analytics and unlimited productivity tools."}
         onOpenChange={(open) => {
           if (!open) setFeature(null);
