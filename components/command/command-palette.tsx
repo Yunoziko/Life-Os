@@ -15,7 +15,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 
-const groups = ["Create", "Search", "Navigate"] as const;
+const groups = ["Ask", "Create", "Search", "Navigate"] as const;
 
 export function CommandPalette() {
   const router = useRouter();

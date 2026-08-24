@@ -353,6 +353,7 @@ model AIMessage {
   conversationId String
   role           AIMessageRole
   content        String
+  metadata       Json?
   createdAt      DateTime      @default(now())
 
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

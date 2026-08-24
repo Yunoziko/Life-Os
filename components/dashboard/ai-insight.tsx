@@ -13,8 +13,8 @@ export function AiInsight({ insight }: { insight: DashboardInsight }) {
         <h2 className="text-sm font-medium tracking-tight">LifeOS Insight</h2>
       </div>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">{insight.body}</p>
-      <Link href="/ai" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-4")}>
-        Ask LifeOS
+      <Link href="/ai?prompt=What%20should%20I%20focus%20on%20today%3F" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-4")}>
+        Ask LifeOS →
       </Link>
     </section>
   );

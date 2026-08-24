@@ -22,13 +22,53 @@ export type AppCommand = {
   id: string;
   label: string;
   keywords: string[];
-  group: "Create" | "Navigate" | "Search";
+  group: "Ask" | "Create" | "Navigate" | "Search";
   icon: LucideIcon;
   shortcut?: string;
   action: CommandAction;
 };
 
 export const appCommands: AppCommand[] = [
+  {
+    id: "ask-lifeos",
+    label: "Ask LifeOS",
+    keywords: ["ai", "chat", "assistant", "brain"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai" },
+  },
+  {
+    id: "plan-my-day",
+    label: "Plan my day",
+    keywords: ["ai", "schedule", "today", "focus"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai?prompt=Plan%20my%20day" },
+  },
+  {
+    id: "review-my-goals",
+    label: "Review my goals",
+    keywords: ["ai", "goals", "progress"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai?prompt=Review%20my%20goals" },
+  },
+  {
+    id: "summarize-my-week",
+    label: "Summarize my week",
+    keywords: ["ai", "review", "week"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai?prompt=Summarize%20my%20week" },
+  },
+  {
+    id: "open-ai",
+    label: "Open AI",
+    keywords: ["chat", "assistant", "ask", "lifeos"],
+    group: "Ask",
+    icon: Sparkles,
+    action: { kind: "navigate", href: "/ai" },
+  },
   {
     id: "create-task",
     label: "Create task",
@@ -168,14 +208,6 @@ export const appCommands: AppCommand[] = [
     group: "Navigate",
     icon: CalendarDays,
     action: { kind: "navigate", href: "/calendar" },
-  },
-  {
-    id: "open-ai",
-    label: "Open AI assistant",
-    keywords: ["chat", "assistant", "ask"],
-    group: "Navigate",
-    icon: Sparkles,
-    action: { kind: "navigate", href: "/ai" },
   },
   {
     id: "go-settings",
