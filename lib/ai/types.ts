@@ -26,7 +26,10 @@ export type AIActionType =
   | "DELETE_TASK"
   | "DELETE_GOAL"
   | "DELETE_PROJECT"
-  | "DELETE_NOTE";
+  | "DELETE_NOTE"
+  | "REMEMBER_FACT"
+  | "UPDATE_MEMORY"
+  | "FORGET_MEMORY";
 
 export type AIActionStatus = "awaiting_confirmation" | "executed" | "cancelled" | "failed";
 
@@ -49,6 +52,7 @@ export type AIMessageMetadata = {
   tools?: { name: string; ok: boolean }[];
   agentRunId?: string;
   agentSteps?: { label: string; status: string }[];
+  usedMemories?: boolean;
 };
 
 export type ConversationSummary = {

@@ -100,6 +100,7 @@ export function BillingView({
               ["Projects", usage.PROJECTS, limits.PROJECTS, "active"] as const,
               ["Goals", usage.GOALS, limits.GOALS, "active"] as const,
               ["Habits", usage.HABITS, limits.HABITS, "active"] as const,
+              ["Memories", usage.MEMORIES, limits.MEMORIES, "saved"] as const,
             ] as const
           ).map(([label, used, limit]) => (
             <li key={label} className="rounded-xl bg-muted/40 px-3 py-3">

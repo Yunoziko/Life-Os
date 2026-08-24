@@ -10,6 +10,8 @@ import {
   touchConversation,
 } from "@/lib/db/ai";
 import type { AgentStepRecord } from "@/lib/agents/types";
+import { getRelevantMemories } from "@/lib/memory/service";
+import { formatMemoryForPrompt } from "@/lib/memory/retrieval";
 
 function actionsFromSteps(steps: AgentStepRecord[]): StructuredAction[] {
   return steps
@@ -43,12 +45,16 @@ export async function maybeRunAgentFromChat(input: {
   await appendMessage(conversationId, "USER", input.message);
   input.onEvent({ type: "status", value: "thinking" });
 
+  const memories = await getRelevantMemories({ userId: input.userId, query: input.message });
+  const memoryHint = formatMemoryForPrompt(memories);
+
   const live: { label: string; status: string }[] = [];
   const result = await runAgent({
     userId: input.userId,
     timeZone: input.timeZone,
     goal: input.message,
     conversationId,
+    contextHint: memoryHint,
     onEvent: (event) => {
       if (event.type === "plan") {
         live.splice(
@@ -89,6 +95,7 @@ export async function maybeRunAgentFromChat(input: {
     agentRunId: result.runId,
     actions: pending,
     agentSteps: progress,
+    usedMemories: memories.some((item) => item.confidence === "HIGH"),
   });
 
   input.onEvent({

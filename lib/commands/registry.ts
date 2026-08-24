@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Brain,
   BarChart3,
   Bell,
   BookOpen,
@@ -280,6 +281,46 @@ export const appCommands: AppCommand[] = [
     group: "Navigate",
     icon: Settings,
     action: { kind: "navigate", href: "/settings" },
+  },
+  {
+    id: "open-memory",
+    label: "Open Memory",
+    keywords: ["remember", "preference", "azio memory", "personalization"],
+    group: "Navigate",
+    icon: Brain,
+    action: { kind: "navigate", href: "/settings/memory" },
+  },
+  {
+    id: "manage-memory",
+    label: "Manage Memory",
+    keywords: ["edit", "delete", "forget", "export", "settings"],
+    group: "Navigate",
+    icon: Brain,
+    action: { kind: "navigate", href: "/settings/memory" },
+  },
+  {
+    id: "what-do-you-remember",
+    label: "What do you remember about me?",
+    keywords: ["memories", "show", "list", "azio"],
+    group: "Ask",
+    icon: Brain,
+    action: { kind: "navigate", href: "/ai?prompt=What%20do%20you%20remember%20about%20me%3F" },
+  },
+  {
+    id: "remember-this",
+    label: "Remember this",
+    keywords: ["save", "preference", "fact"],
+    group: "Ask",
+    icon: Brain,
+    action: { kind: "navigate", href: "/ai?prompt=Remember%20that%20" },
+  },
+  {
+    id: "forget-this",
+    label: "Forget this",
+    keywords: ["delete", "remove", "memory"],
+    group: "Ask",
+    icon: Brain,
+    action: { kind: "navigate", href: "/ai?prompt=Forget%20" },
   },
   {
     id: "open-billing",

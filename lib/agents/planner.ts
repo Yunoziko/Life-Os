@@ -55,17 +55,20 @@ export function deterministicPlan(input: {
   const kind = input.kind ?? detectObjectiveKind(input.goal);
   const plans: Record<Exclude<AgentObjectiveKind, "custom">, AgentPlanStep[]> = {
     plan_day: [
+      step("search_memories", { query: input.goal }),
       step("get_today_tasks"),
       step("get_today_schedule"),
       step("get_active_goals"),
       step("get_today_habits"),
     ],
     prepare_tomorrow: [
+      step("search_memories", { query: input.goal }),
       step("get_upcoming_events"),
       step("get_tasks", { status: "TODO" }),
       step("get_active_goals"),
     ],
     daily_brief: [
+      step("search_memories", { query: input.goal }),
       step("get_today_tasks"),
       step("get_tasks", { priority: "HIGH" }),
       step("get_today_schedule"),
@@ -75,6 +78,7 @@ export function deterministicPlan(input: {
       step("create_note", { title: "Daily brief" }),
     ],
     weekly_review: [
+      step("search_memories", { query: input.goal }),
       step("get_weekly_summary"),
       step("get_active_goals"),
       step("get_habits"),
@@ -84,8 +88,9 @@ export function deterministicPlan(input: {
       step("create_note", { title: "Weekly review" }),
     ],
     habit_review: [step("get_today_habits"), step("get_habits")],
-    goal_checkin: [step("get_active_goals"), step("get_tasks")],
+    goal_checkin: [step("search_memories", { query: input.goal }), step("get_active_goals"), step("get_tasks")],
     project_review: [
+      step("search_memories", { query: input.goal }),
       step("get_active_projects"),
       step("get_tasks"),
       step("get_active_goals"),

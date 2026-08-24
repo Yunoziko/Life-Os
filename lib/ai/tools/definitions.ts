@@ -358,6 +358,109 @@ export const lifeOSTools: AIToolDefinition[] = [
     description: "Propose deleting a note. Always requires confirmation.",
     parameters: { type: "object", additionalProperties: false, properties: idOrTitle.properties },
   },
+  {
+    name: "search_memories",
+    description: "Search the user's saved AZIO memories. Returns only relevant, user-controlled facts. Never dump the full memory store.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        query: { type: "string", description: "Keywords from the current request, project, or goal." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "list_memories",
+    description: "List saved memories when the user asks what AZIO remembers. Optional filter by query or type.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        query: { type: "string" },
+        type: {
+          type: "string",
+          enum: [
+            "PREFERENCE",
+            "GOAL_CONTEXT",
+            "PROJECT_CONTEXT",
+            "ROUTINE",
+            "DECISION",
+            "IMPORTANT_CONTEXT",
+            "WORKFLOW",
+            "PERSONALIZATION",
+          ],
+        },
+      },
+    },
+  },
+  {
+    name: "remember_fact",
+    description:
+      "Propose saving a concise, useful, non-sensitive fact. Do not store raw conversations, inferred personality traits, emails, GitHub text, or calendar descriptions. AZIO will ask the user to confirm unless they already asked to remember it.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        content: { type: "string", description: "A short factual memory in the user's voice, e.g. 'User prefers morning planning.'" },
+        type: {
+          type: "string",
+          enum: [
+            "PREFERENCE",
+            "GOAL_CONTEXT",
+            "PROJECT_CONTEXT",
+            "ROUTINE",
+            "DECISION",
+            "IMPORTANT_CONTEXT",
+            "WORKFLOW",
+            "PERSONALIZATION",
+          ],
+        },
+        projectId: { type: "string" },
+        goalId: { type: "string" },
+      },
+      required: ["content"],
+    },
+  },
+  {
+    name: "update_memory",
+    description: "Propose updating an existing saved memory. Requires confirmation.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        id: { type: "string" },
+        content: { type: "string" },
+        type: {
+          type: "string",
+          enum: [
+            "PREFERENCE",
+            "GOAL_CONTEXT",
+            "PROJECT_CONTEXT",
+            "ROUTINE",
+            "DECISION",
+            "IMPORTANT_CONTEXT",
+            "WORKFLOW",
+            "PERSONALIZATION",
+          ],
+        },
+        importance: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"] },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "forget_memory",
+    description: "Propose forgetting a saved memory. Always requires confirmation. Does not delete tasks, projects, or notes.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        id: { type: "string" },
+        query: { type: "string" },
+      },
+    },
+  },
 ];
 
 export const READ_TOOLS = new Set([
@@ -379,6 +482,8 @@ export const READ_TOOLS = new Set([
   "get_recent_commits",
   "get_open_issues",
   "get_pull_requests",
+  "search_memories",
+  "list_memories",
 ]);
 
 export const AUTO_WRITE_TOOLS = new Set([
@@ -400,6 +505,9 @@ export const CONFIRM_WRITE_TOOLS = new Set([
   "delete_goal",
   "delete_project",
   "delete_note",
+  "remember_fact",
+  "update_memory",
+  "forget_memory",
 ]);
 
 export const TOOL_ACTION_TYPE: Record<string, AIActionType> = {
@@ -418,6 +526,9 @@ export const TOOL_ACTION_TYPE: Record<string, AIActionType> = {
   delete_goal: "DELETE_GOAL",
   delete_project: "DELETE_PROJECT",
   delete_note: "DELETE_NOTE",
+  remember_fact: "REMEMBER_FACT",
+  update_memory: "UPDATE_MEMORY",
+  forget_memory: "FORGET_MEMORY",
 };
 
 export function toolNeedsConfirmation(name: string, writeCount: number) {

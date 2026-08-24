@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/agents/engine.test.ts lib/jobs/worker.test.ts lib/automations/schedule.test.ts",
+    "test": "tsx --test lib/agents/engine.test.ts lib/jobs/worker.test.ts lib/automations/schedule.test.ts lib/memory/memory.test.ts lib/billing/verify.ts",
     "worker": "tsx scripts/worker.ts",
     "scheduler": "tsx scripts/scheduler.ts",
     "db:generate": "prisma generate",

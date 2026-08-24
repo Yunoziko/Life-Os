@@ -82,6 +82,9 @@ export function MessageThread({
                   />
                 ))
               : null}
+            {!isUser && message.metadata?.usedMemories ? (
+              <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">Based on your saved preference…</p>
+            ) : null}
             <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
               {formatStamp(message.createdAt, timeZone)}
             </p>

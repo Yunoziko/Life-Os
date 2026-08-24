@@ -22,6 +22,10 @@ export function ActionCard({
   const [error, setError] = useState<string | null>(null);
   const copy = describeAction(current.tool, current.payload);
   const waiting = current.status === "awaiting_confirmation";
+  const remember = current.tool === "remember_fact";
+  const forget = current.tool === "forget_memory";
+  const confirmLabel = remember ? "Remember" : forget ? "Forget" : "Confirm";
+  const cancelLabel = remember ? "Don’t remember" : forget ? "Keep" : "Cancel";
 
   const run = (kind: "confirm" | "cancel") => {
     if (!messageId) return;
@@ -64,11 +68,11 @@ export function ActionCard({
         <div className="mt-3 flex gap-2">
           <Button type="button" size="sm" disabled={pending || !messageId} onClick={() => run("confirm")}>
             <Check />
-            Confirm
+            {confirmLabel}
           </Button>
           <Button type="button" size="sm" variant="outline" disabled={pending || !messageId} onClick={() => run("cancel")}>
             <X />
-            Cancel
+            {cancelLabel}
           </Button>
         </div>
       ) : current.result ? (

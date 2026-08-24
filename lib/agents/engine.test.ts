@@ -58,8 +58,18 @@ test("planner emits structured plans for known objectives", () => {
   const plan = deterministicPlan({ goal: "Plan my day" });
   assert.equal(detectObjectiveKind("Plan my day"), "plan_day");
   assert.ok(plan.steps.length >= 3);
+  assert.equal(plan.steps[0]?.tool, "search_memories");
   assert.ok(plan.steps.every((step) => isRegisteredTool(step.tool)));
   assert.ok(plan.steps.length <= MAX_AGENT_STEPS);
+});
+
+test("memory tools have the correct permissions", () => {
+  assert.equal(toolPermission("search_memories"), "READ");
+  assert.equal(toolPermission("list_memories"), "READ");
+  assert.equal(toolPermission("remember_fact"), "WRITE");
+  assert.equal(toolPermission("update_memory"), "WRITE");
+  assert.equal(toolPermission("forget_memory"), "DESTRUCTIVE");
+  assert.equal(stepRequiresConfirmation({ tool: "forget_memory", writeCount: 1 }), true);
 });
 
 test("weekly review, project review, and project checklist plans are structured", () => {

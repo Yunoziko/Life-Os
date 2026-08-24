@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Settings, UserRound, Wallet } from "lucide-react";
+import { Brain, LogOut, Settings, UserRound, Wallet } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -58,6 +58,10 @@ export function UserMenu({
           <DropdownMenuItem render={<Link href="/settings" />}>
             <Settings />
             Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/settings/memory" />}>
+            <Brain />
+            Memory
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link href="/settings/billing" />}>
             <Wallet />

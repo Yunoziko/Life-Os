@@ -27,6 +27,13 @@ import {
 } from "@/lib/ai/tools/integrations";
 import { assertWithinLimit } from "@/lib/billing/entitlements";
 import { EntitlementError } from "@/lib/billing/errors";
+import {
+  forgetMemoryTool,
+  listMemoriesTool,
+  rememberFactTool,
+  searchMemoriesTool,
+  updateMemoryTool,
+} from "@/lib/memory/tools";
 
 const optionalId = z.string().uuid().optional();
 const optionalTitle = z.string().trim().min(1).max(160).optional();
@@ -989,6 +996,11 @@ const handlers: Record<string, (ctx: ToolContext, args: unknown) => Promise<Tool
   delete_goal: (ctx, args) => deleteGoal(ctx, args),
   delete_project: (ctx, args) => deleteProject(ctx, args),
   delete_note: (ctx, args) => deleteNote(ctx, args),
+  search_memories: (ctx, args) => searchMemoriesTool(ctx, args),
+  list_memories: (ctx, args) => listMemoriesTool(ctx, args),
+  remember_fact: (ctx, args) => rememberFactTool(ctx, args),
+  update_memory: (ctx, args) => updateMemoryTool(ctx, args),
+  forget_memory: (ctx, args) => forgetMemoryTool(ctx, args),
 };
 
 export function isKnownTool(name: string) {
@@ -1015,6 +1027,7 @@ export async function executeLifeOSTool(
     aiLog.toolFailed({ user: publicUserRef(ctx.userId), tool: name, ok: false });
     if (error instanceof AIError) return fail(error.toUserMessage());
     if (error instanceof IntegrationError) return fail(error.toUserMessage());
+    if (error instanceof EntitlementError) return fail(error.message);
     return fail("That action couldn’t be completed.");
   }
 }

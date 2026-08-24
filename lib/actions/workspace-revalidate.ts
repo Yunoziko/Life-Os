@@ -12,6 +12,7 @@ export function revalidateWorkspace(paths: string[] = []) {
     revalidatePath("/learning");
     revalidatePath("/settings");
     revalidatePath("/settings/billing");
+    revalidatePath("/settings/memory");
     revalidatePath("/pricing");
     revalidatePath("/analytics");
     revalidatePath("/ai");

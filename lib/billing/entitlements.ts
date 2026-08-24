@@ -55,7 +55,7 @@ export async function checkUsageLimit(userId: string, feature: FeatureKey) {
 }
 
 export async function getUsage(userId: string, timeZone = "UTC") {
-  const [projects, goals, habits, integrations, messages] = await Promise.all([
+  const [projects, goals, habits, integrations, messages, memories] = await Promise.all([
     prisma.project.count({ where: { userId, status: { in: ACTIVE_PROJECTS } } }),
     prisma.goal.count({ where: { userId, status: { in: ACTIVE_GOALS } } }),
     prisma.habit.count({ where: { userId, archived: false } }),
@@ -63,6 +63,7 @@ export async function getUsage(userId: string, timeZone = "UTC") {
       where: { userId, status: "CONNECTED", accessTokenEncrypted: { not: null } },
     }),
     getAIUsageCount(userId, timeZone),
+    prisma.memory.count({ where: { userId, status: "ACTIVE" } }),
   ]);
 
   return {
@@ -71,6 +72,7 @@ export async function getUsage(userId: string, timeZone = "UTC") {
     HABITS: habits,
     INTEGRATIONS: integrations,
     AI_MESSAGES: messages,
+    MEMORIES: memories,
   } satisfies Record<CountableFeature, number>;
 }
 

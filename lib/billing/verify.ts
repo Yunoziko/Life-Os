@@ -12,6 +12,8 @@ assert.equal(planLimit("FREE", "GOALS"), 5);
 assert.equal(planLimit("FREE", "HABITS"), 10);
 assert.equal(planLimit("FREE", "AI_MESSAGES"), 100);
 assert.equal(planLimit("FREE", "INTEGRATIONS"), 1);
+assert.equal(planLimit("FREE", "MEMORIES"), 25);
+assert.equal(planLimit("PRO", "MEMORIES"), null);
 assert.equal(planLimit("PRO", "PROJECTS"), null);
 assert.equal(planHasFeature("FREE", "ADVANCED_ANALYTICS"), false);
 assert.equal(planHasFeature("PRO", "ADVANCED_ANALYTICS"), true);

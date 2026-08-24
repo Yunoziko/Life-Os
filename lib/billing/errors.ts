@@ -140,4 +140,8 @@ export const UPGRADE_COPY: Record<FeatureKey, { title: string; body: string }> =
     title: "Unlock automations",
     body: "Automation is available with AZIO Pro.",
   },
+  MEMORIES: {
+    title: "Unlock more memories",
+    body: "Free includes 25 saved memories. Pro removes the cap so AZIO can keep more of your context.",
+  },
 };

@@ -8,9 +8,10 @@ export type FeatureKey =
   | "ADVANCED_ANALYTICS"
   | "INTEGRATIONS"
   | "AI_WEEKLY_REVIEW"
-  | "AUTOMATION";
+  | "AUTOMATION"
+  | "MEMORIES";
 
-export type CountableFeature = "AI_MESSAGES" | "PROJECTS" | "GOALS" | "HABITS" | "INTEGRATIONS";
+export type CountableFeature = "AI_MESSAGES" | "PROJECTS" | "GOALS" | "HABITS" | "INTEGRATIONS" | "MEMORIES";
 export type BooleanFeature = "ADVANCED_ANALYTICS" | "AI_WEEKLY_REVIEW" | "AUTOMATION";
 
 export const FEATURES: FeatureKey[] = [
@@ -22,12 +23,14 @@ export const FEATURES: FeatureKey[] = [
   "INTEGRATIONS",
   "AI_WEEKLY_REVIEW",
   "AUTOMATION",
+  "MEMORIES",
 ];
 
 export const PRO_BENEFITS = [
   "Unlimited projects",
   "Unlimited goals",
   "Unlimited habits",
+  "Unlimited memories",
   "Advanced analytics",
   "More AI usage",
   "Advanced AZIO intelligence",
@@ -49,6 +52,7 @@ export type PlanDefinition = {
     HABITS: number | null;
     AI_MESSAGES: number | null;
     INTEGRATIONS: number | null;
+    MEMORIES: number | null;
     ADVANCED_ANALYTICS: boolean;
     AI_WEEKLY_REVIEW: boolean;
     AUTOMATION: boolean;
@@ -71,6 +75,7 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
       HABITS: 10,
       AI_MESSAGES: 100,
       INTEGRATIONS: 1,
+      MEMORIES: 25,
       ADVANCED_ANALYTICS: false,
       AI_WEEKLY_REVIEW: false,
       AUTOMATION: false,
@@ -80,6 +85,7 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
       "5 active projects",
       "5 active goals",
       "10 active habits",
+      "25 saved memories",
       "Limited monthly AI",
       "Basic analytics",
       "1 external integration",
@@ -99,12 +105,13 @@ export const PLAN_CATALOG: Record<BillingPlanId, PlanDefinition> = {
       HABITS: null,
       AI_MESSAGES: 2_000,
       INTEGRATIONS: null,
+      MEMORIES: null,
       ADVANCED_ANALYTICS: true,
       AI_WEEKLY_REVIEW: true,
       AUTOMATION: true,
     },
     highlights: [
-      "Unlimited projects, goals, and habits",
+      "Unlimited projects, goals, habits, and memories",
       "Advanced analytics and patterns",
       "Full AZIO AI with higher limits",
       "Weekly AI review and daily brief",

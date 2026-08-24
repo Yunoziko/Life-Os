@@ -21,8 +21,10 @@ export function payloadFromArgs(args: Record<string, unknown>): AIActionPayload 
 
 export function describeAction(tool: string, payload: AIActionPayload) {
   const title =
+    str(payload.content) ||
     str(payload.title) ||
     str(payload.name) ||
+    str(payload.query) ||
     "AZIO change";
 
   const due = [str(payload.dueDate) ?? str(payload.date), str(payload.dueTime) ?? str(payload.startTime)]
@@ -54,6 +56,9 @@ export function describeAction(tool: string, payload: AIActionPayload) {
     delete_goal: "Delete goal",
     delete_project: "Delete project",
     delete_note: "Delete note",
+    remember_fact: "Remember this",
+    update_memory: "Update memory",
+    forget_memory: "Forget this",
   };
 
   return {

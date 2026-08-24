@@ -3,7 +3,8 @@ import { AIError } from "@/lib/ai/errors";
 import { aiLog, publicUserRef } from "@/lib/ai/logger";
 import { buildLifeOSContext, formatNow } from "@/lib/ai/context";
 import { lifeOSSystemPrompt } from "@/lib/ai/prompt";
-import { getUserMemory, formatMemoryForPrompt } from "@/lib/ai/memory";
+import { getUserMemory, formatMemoryForPrompt } from "@/lib/memory";
+import { maybeHandleMemoryChat } from "@/lib/memory/chat";
 import { assertAIRateLimit } from "@/lib/ai/rate-limit";
 import { assertAIUsage } from "@/lib/billing/entitlements";
 import { recordAIUsage } from "@/lib/billing/usage";
@@ -72,6 +73,14 @@ export async function runLifeOSChat(input: {
   if (!text) throw new AIError("invalid_args", "Write a message first.");
   if (text.length > 4000) throw new AIError("invalid_args", "That message is too long.");
 
+  const memoryHandled = await maybeHandleMemoryChat({
+    userId: input.userId,
+    conversationId: input.conversationId,
+    message: text,
+    onEvent: input.onEvent,
+  });
+  if (memoryHandled) return;
+
   const handled = await maybeRunAgentFromChat({
     userId: input.userId,
     timeZone: input.timeZone,
@@ -118,7 +127,7 @@ export async function runLifeOSChat(input: {
   const now = formatNow(input.timeZone);
   const [context, memory] = await Promise.all([
     buildLifeOSContext(input.userId, input.timeZone),
-    getUserMemory(input.userId),
+    getUserMemory(input.userId, text),
   ]);
 
   input.onEvent({ type: "context", sources: context.sources });
@@ -275,6 +284,7 @@ export async function runLifeOSChat(input: {
     actions: pendingActions.length ? pendingActions : undefined,
     sources: context.sources,
     tools: toolTrace.length ? toolTrace : undefined,
+    usedMemories: memory.some((item) => item.confidence === "HIGH"),
   });
 
   await recordAIUsage(input.userId, input.timeZone);

@@ -40,6 +40,16 @@ export default async function SettingsPage() {
       </section>
 
       <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+        <h2 className="text-sm font-medium">Memory</h2>
+        <p className="mt-1 mb-4 text-sm text-muted-foreground">
+          Control what AZIO remembers and uses to personalize your experience.
+        </p>
+        <Link href="/settings/memory" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+          Manage memory
+        </Link>
+      </section>
+
+      <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <h2 className="text-sm font-medium">Appearance</h2>
         <p className="mt-1 mb-4 text-sm text-muted-foreground">
           Light, dark, or follow the system.

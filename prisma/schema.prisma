@@ -153,6 +153,44 @@ enum NotificationChannel {
   IN_APP
 }
 
+enum MemoryType {
+  PREFERENCE
+  GOAL_CONTEXT
+  PROJECT_CONTEXT
+  ROUTINE
+  DECISION
+  IMPORTANT_CONTEXT
+  WORKFLOW
+  PERSONALIZATION
+}
+
+enum MemoryStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum MemorySource {
+  USER
+  AI
+  NOTE
+  TASK
+  PROJECT
+  CONVERSATION
+}
+
+enum MemoryImportance {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MemoryConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
 enum NotificationType {
   AUTOMATION_COMPLETED
   AUTOMATION_FAILED
@@ -195,6 +233,7 @@ model User {
   automations    Automation[]
   auditLogs      AgentAuditLog[]
   notifications  Notification[]
+  memories       Memory[]
 
   @@index([email])
 }
@@ -259,6 +298,7 @@ model Profile {
   timezone    String   @default("UTC")
   weekStartsOn Int     @default(1)
   bio         String?
+  memoryEnabled Boolean @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -313,6 +353,7 @@ model Goal {
   notes         Note[]
   events        CalendarEvent[]
   learningItems LearningItem[]
+  memories      Memory[]
 
   @@index([userId, status])
   @@index([userId, priority])
@@ -356,6 +397,7 @@ model Project {
   notes         Note[]
   events        CalendarEvent[]
   learningItems LearningItem[]
+  memories      Memory[]
 
   @@index([userId, status])
   @@index([goalId])
@@ -731,3 +773,31 @@ model WorkerHeartbeat {
   runningCount  Int       @default(0)
   updatedAt     DateTime  @updatedAt
 }
+
+model Memory {
+  id          String            @id @default(uuid())
+  userId      String
+  type        MemoryType
+  content     String
+  source      MemorySource      @default(USER)
+  importance  MemoryImportance  @default(MEDIUM)
+  confidence  MemoryConfidence  @default(HIGH)
+  status      MemoryStatus      @default(ACTIVE)
+  projectId   String?
+  goalId      String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  lastUsedAt  DateTime?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  goal    Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, type, status])
+  @@index([userId, importance, lastUsedAt])
+  @@index([userId, projectId])
+  @@index([userId, goalId])
+  @@index([userId, createdAt])
+}
+

@@ -22,6 +22,8 @@ const READ_TOOLS = new Set([
   "get_recent_commits",
   "get_open_issues",
   "get_pull_requests",
+  "search_memories",
+  "list_memories",
 ]);
 
 const WRITE_TOOLS = new Set([
@@ -36,9 +38,17 @@ const WRITE_TOOLS = new Set([
   "complete_habit",
   "create_learning_item",
   "update_learning_progress",
+  "remember_fact",
+  "update_memory",
 ]);
 
-const DESTRUCTIVE_TOOLS = new Set(["delete_task", "delete_goal", "delete_project", "delete_note"]);
+const DESTRUCTIVE_TOOLS = new Set([
+  "delete_task",
+  "delete_goal",
+  "delete_project",
+  "delete_note",
+  "forget_memory",
+]);
 
 const SAFE_SINGLE_WRITES = new Set(["create_task", "complete_task", "create_note", "complete_habit"]);
 
@@ -149,6 +159,11 @@ export function publicStepLabel(tool: string) {
     delete_goal: "Deleting a goal",
     delete_project: "Deleting a project",
     delete_note: "Deleting a note",
+    search_memories: "Checking saved memories",
+    list_memories: "Listing saved memories",
+    remember_fact: "Saving a memory",
+    update_memory: "Updating a memory",
+    forget_memory: "Forgetting a memory",
   };
   return labels[tool] ?? "Working";
 }
