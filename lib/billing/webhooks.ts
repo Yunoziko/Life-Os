@@ -65,9 +65,16 @@ export async function processRazorpayWebhook(rawBody: string, signature: string)
     return { ok: true as const, duplicate: true, event };
   }
 
-  await prisma.billingWebhookEvent.create({
-    data: { provider: "razorpay", eventKey: key, eventType: event || "unknown" },
-  });
+  try {
+    await prisma.billingWebhookEvent.create({
+      data: { provider: "razorpay", eventKey: key, eventType: event || "unknown" },
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      return { ok: true as const, duplicate: true, event };
+    }
+    throw error;
+  }
 
   const entity = body.payload?.subscription?.entity;
   if (entity && typeof entity.id === "string") {

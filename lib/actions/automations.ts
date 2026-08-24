@@ -5,6 +5,7 @@ import { assertCanUseFeature } from "@/lib/billing/entitlements";
 import { entitlementActionError } from "@/lib/billing/action";
 import { EntitlementError } from "@/lib/billing/errors";
 import { MAX_AUTOMATIONS_PER_USER } from "@/lib/agents/types";
+import { assertRateLimit, RateLimitError } from "@/lib/security/rate-limit";
 import {
   countAutomations,
   createAutomationRecord,
@@ -40,6 +41,7 @@ export async function createAutomationFromTemplateAction(
   try {
     const user = await requireUser();
     await requirePro(user.id);
+    await assertRateLimit("automation.create", user.id);
     const template = templateById(templateId);
     if (!template) return { ok: false, error: "That template isn’t available." };
     const count = await countAutomations(user.id);
@@ -62,6 +64,7 @@ export async function createAutomationFromTemplateAction(
     revalidateWorkspace(["/automations"]);
     return { ok: true, data: { id: created.id } };
   } catch (error) {
+    if (error instanceof RateLimitError) return { ok: false, error: error.message };
     return entitlementActionError(error) ?? { ok: false, error: "Could not create that automation." };
   }
 }
@@ -70,6 +73,7 @@ export async function createAutomationAction(formData: FormData): Promise<Action
   try {
     const user = await requireUser();
     await requirePro(user.id);
+    await assertRateLimit("automation.create", user.id);
     const count = await countAutomations(user.id);
     if (count >= MAX_AUTOMATIONS_PER_USER) {
       return { ok: false, error: "You’ve reached the automation limit for this workspace." };
@@ -100,6 +104,7 @@ export async function createAutomationAction(formData: FormData): Promise<Action
     revalidateWorkspace(["/automations"]);
     return { ok: true, data: { id: created.id } };
   } catch (error) {
+    if (error instanceof RateLimitError) return { ok: false, error: error.message };
     return entitlementActionError(error) ?? { ok: false, error: "Could not create that automation." };
   }
 }
@@ -148,6 +153,7 @@ export async function runAutomationNowAction(id: string): Promise<ActionResult<{
   try {
     const user = await requireUser();
     await requirePro(user.id);
+    await assertRateLimit("automation.run", user.id);
     const existing = await getOwnedAutomation(user.id, id);
     if (!existing) return { ok: false, error: "Automation not found." };
     const run = await enqueueManualAutomation({
@@ -157,10 +163,11 @@ export async function runAutomationNowAction(id: string): Promise<ActionResult<{
     revalidateWorkspace(["/automations", `/automations/${id}`]);
     return { ok: true, data: { runId: run.id } };
   } catch (error) {
+    if (error instanceof RateLimitError) return { ok: false, error: error.message };
     if (error instanceof EntitlementError) {
       return entitlementActionError(error) ?? { ok: false, error: error.message };
     }
-    return { ok: false, error: error instanceof Error ? error.message : "Could not queue that automation." };
+    return { ok: false, error: "Could not queue that automation." };
   }
 }
 

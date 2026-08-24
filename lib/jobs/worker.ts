@@ -12,8 +12,16 @@ import { automationLog, publicUserRef } from "@/lib/jobs/log";
 import { claimQueuedAutomationRun, requeueAutomationRun } from "@/lib/jobs/queue";
 import { enqueueDueAutomations } from "@/lib/jobs/scheduler";
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number, wake?: { current: (() => void) | null }) {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    if (wake) {
+      wake.current = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    }
+  });
 }
 
 export async function processOneAutomationJob(workerId: string) {
@@ -79,6 +87,7 @@ export async function startAutomationWorker(options?: { includeScheduler?: boole
   const pollMs = workerPollMs();
   const workerId = `worker-${process.pid}`;
   let running = true;
+  const wake = { current: null as (() => void) | null };
 
   automationLog.info("worker_started", {
     jobId: workerId,
@@ -88,7 +97,10 @@ export async function startAutomationWorker(options?: { includeScheduler?: boole
   await writeWorkerHeartbeat({ status: "starting" });
 
   const stop = () => {
+    if (!running) return;
     running = false;
+    automationLog.info("worker_stopping", { jobId: workerId });
+    wake.current?.();
   };
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
@@ -102,14 +114,14 @@ export async function startAutomationWorker(options?: { includeScheduler?: boole
         }
         const worked = await processOneAutomationJob(id);
         await writeWorkerHeartbeat({ status: worked ? "running" : "idle" });
-        if (!worked) await sleep(pollMs);
+        if (!worked) await sleep(pollMs, wake);
       } catch (error) {
         automationLog.error("worker_loop_error", {
           jobId: id,
           error: error instanceof Error ? error.name : "unknown",
         });
         await writeWorkerHeartbeat({ status: "error" });
-        await sleep(pollMs);
+        await sleep(pollMs, wake);
       }
     }
   });

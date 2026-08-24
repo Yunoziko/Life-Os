@@ -1,41 +1,23 @@
+import { appLog } from "@/lib/observability/log";
+
 type LogFields = Record<string, string | number | boolean | null | undefined>;
-
-function write(level: "info" | "warn" | "error", event: string, fields: LogFields = {}) {
-  const payload = {
-    scope: "lifeos-ai",
-    event,
-    ...fields,
-  };
-
-  if (level === "error") {
-    console.error(payload);
-    return;
-  }
-  if (level === "warn") {
-    console.warn(payload);
-    return;
-  }
-  console.info(payload);
-}
 
 export const aiLog = {
   started(fields: LogFields) {
-    write("info", "request_started", fields);
+    appLog.info("ai_request_started", { scope: "azio-ai", ...fields });
   },
   completed(fields: LogFields) {
-    write("info", "request_completed", fields);
+    appLog.info("ai_request_completed", { scope: "azio-ai", ...fields });
   },
   tool(fields: LogFields) {
-    write("info", "tool_executed", fields);
+    appLog.info("ai_tool_executed", { scope: "azio-ai", ...fields });
   },
   toolFailed(fields: LogFields) {
-    write("warn", "tool_failed", fields);
+    appLog.warn("ai_tool_failed", { scope: "azio-ai", ...fields });
   },
   warn(event: string, fields: LogFields = {}) {
-    write("warn", event, fields);
+    appLog.warn(`ai_${event}`, { scope: "azio-ai", ...fields });
   },
 };
 
-export function publicUserRef(userId: string) {
-  return userId.slice(-6);
-}
+export { publicUserRef } from "@/lib/observability/log";

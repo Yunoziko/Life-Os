@@ -104,14 +104,23 @@ export async function executeAutomationRun(runId: string) {
     await assertAutomationRunBudget(userId, timeZone);
 
     const autoConfirm = SAFE_TEMPLATE_ACTIONS.has(automation.actionType);
-    const result = await runAgent({
-      userId,
-      timeZone,
-      goal: objectiveFrom(automation),
-      automationRunId: run.id,
-      autoConfirm,
-      eventType: automation.eventType ?? undefined,
-    });
+    const result = await Promise.race([
+      runAgent({
+        userId,
+        timeZone,
+        goal: objectiveFrom(automation),
+        automationRunId: run.id,
+        autoConfirm,
+        eventType: automation.eventType ?? undefined,
+      }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          const error = new Error("This automation timed out.");
+          error.name = "TimeoutError";
+          reject(error);
+        }, 55_000);
+      }),
+    ]);
 
     const waiting = result.status === "WAITING";
     const failed = result.status === "FAILED";

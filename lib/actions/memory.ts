@@ -125,6 +125,7 @@ export async function getMemorySettingsSnapshot() {
     prisma.memory.findMany({
       where: { userId: user.id, status: "ACTIVE" },
       orderBy: { updatedAt: "desc" },
+      take: 100,
     }),
     prisma.profile.findUnique({
       where: { userId: user.id },

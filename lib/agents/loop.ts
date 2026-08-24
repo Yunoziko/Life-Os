@@ -14,6 +14,7 @@ import {
   saveAgentRun,
 } from "@/lib/db/agents";
 import { MAX_AGENT_DURATION_MS, MAX_AGENT_STEPS } from "@/lib/agents/types";
+import { assertRateLimit, RateLimitError } from "@/lib/security/rate-limit";
 import type {
   AgentPlan,
   AgentProgressEvent,
@@ -66,6 +67,24 @@ export async function runAgent(input: {
   contextHint?: string;
   onEvent?: (event: AgentProgressEvent) => void;
 }): Promise<AgentRunResult> {
+  try {
+    await assertRateLimit("agent", input.userId);
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      return finish({
+        runId: "",
+        status: "FAILED",
+        goal: input.goal,
+        plan: { goal: input.goal, steps: [] },
+        steps: [],
+        summary: "",
+        error: error.message,
+        failureClass: "recoverable",
+      });
+    }
+    throw error;
+  }
+
   const started = Date.now();
   const agent = await getOrCreateDefaultAgent(input.userId);
   const run = await createAgentRun({

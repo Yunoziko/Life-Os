@@ -128,7 +128,12 @@ export const updateEventSchema = createEventSchema.extend({
 });
 
 export const searchSchema = z.object({
-  query: z.string().trim().min(1).max(120),
+  query: z
+    .string()
+    .trim()
+    .min(2, "Type at least two characters.")
+    .max(80)
+    .refine((value) => !/^[%_*]+$/.test(value), "That search is too broad."),
 });
 
 export const createLearningSchema = z.object({

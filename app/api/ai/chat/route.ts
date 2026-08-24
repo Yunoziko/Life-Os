@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db/prisma";
 import { runLifeOSChat, type ChatStreamEvent } from "@/lib/ai/chat";
 import { AIError, userFacingAIError } from "@/lib/ai/errors";
 import { aiLog, publicUserRef } from "@/lib/ai/logger";
+import { assertTrustedOrigin, createRequestId } from "@/lib/security/http";
+import { userFacingFailure } from "@/lib/observability/log";
 
 export const runtime = "nodejs";
 
@@ -11,11 +13,21 @@ function encode(event: ChatStreamEvent) {
 }
 
 export async function POST(request: Request) {
+  const requestId = request.headers.get("x-request-id") || createRequestId();
+  try {
+    assertTrustedOrigin(request);
+  } catch {
+    return new Response(encode({ type: "error", error: "That request isn’t allowed.", code: "unauthorized" }), {
+      status: 403,
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "x-request-id": requestId },
+    });
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return new Response(encode({ type: "error", error: "Please sign in to use AZIO AI.", code: "unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "x-request-id": requestId },
     });
   }
 
@@ -25,7 +37,14 @@ export async function POST(request: Request) {
   } catch {
     return new Response(encode({ type: "error", error: "That request couldn’t be read.", code: "malformed" }), {
       status: 400,
-      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "x-request-id": requestId },
+    });
+  }
+
+  if (body.conversationId && !/^[0-9a-f-]{36}$/i.test(body.conversationId)) {
+    return new Response(encode({ type: "error", error: "That conversation isn’t available.", code: "invalid_args" }), {
+      status: 400,
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "x-request-id": requestId },
     });
   }
 
@@ -37,7 +56,7 @@ export async function POST(request: Request) {
   if (!user) {
     return new Response(encode({ type: "error", error: "Please sign in to use AZIO AI.", code: "unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "x-request-id": requestId },
     });
   }
 
@@ -61,8 +80,13 @@ export async function POST(request: Request) {
         aiLog.warn("request_failed", {
           user: publicUserRef(user.id),
           code: aiError.code,
+          requestId,
         });
-        send({ type: "error", error: userFacingAIError(aiError), code: aiError.code });
+        send({
+          type: "error",
+          error: aiError.code === "provider" ? userFacingFailure(requestId) : userFacingAIError(aiError),
+          code: aiError.code,
+        });
       } finally {
         controller.close();
       }
@@ -73,6 +97,7 @@ export async function POST(request: Request) {
     headers: {
       "Content-Type": "application/x-ndjson; charset=utf-8",
       "Cache-Control": "no-store",
+      "x-request-id": requestId,
     },
   });
 }

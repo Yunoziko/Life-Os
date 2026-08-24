@@ -129,7 +129,56 @@ export async function touchIntegrationSync(userId: string, provider: Integration
   });
 }
 
+async function revokeProviderToken(
+  provider: IntegrationProvider,
+  accessToken: string,
+  refreshToken: string | null
+) {
+  try {
+    if (provider === "GOOGLE_CALENDAR" || provider === "GMAIL") {
+      await fetch("https://oauth2.googleapis.com/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ token: refreshToken || accessToken }),
+      });
+      return;
+    }
+    if (provider === "GITHUB") {
+      const clientId = process.env.GITHUB_CLIENT_ID?.trim();
+      const clientSecret = process.env.GITHUB_CLIENT_SECRET?.trim();
+      if (!clientId || !clientSecret) return;
+      await fetch(`https://api.github.com/applications/${clientId}/token`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "AZIO",
+        },
+        body: JSON.stringify({ access_token: accessToken }),
+      });
+    }
+  } catch {
+    // Best-effort. Local disconnect still proceeds.
+  }
+}
+
 export async function disconnectIntegration(userId: string, provider: IntegrationProvider) {
+  const row = await prisma.integrationAccount.findFirst({
+    where: { userId, provider },
+    select: { accessTokenEncrypted: true, refreshTokenEncrypted: true },
+  });
+  if (row?.accessTokenEncrypted) {
+    try {
+      await revokeProviderToken(
+        provider,
+        decryptSecret(row.accessTokenEncrypted),
+        row.refreshTokenEncrypted ? decryptSecret(row.refreshTokenEncrypted) : null
+      );
+    } catch {
+      // Continue with local wipe even if decrypt/revoke fails.
+    }
+  }
   await prisma.integrationAccount.updateMany({
     where: { userId, provider },
     data: {

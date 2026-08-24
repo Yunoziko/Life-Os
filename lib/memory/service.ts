@@ -80,6 +80,7 @@ export async function listActiveMemories(userId: string) {
   const rows = await prisma.memory.findMany({
     where: { ...memoryOwnerFilter(userId), status: "ACTIVE" },
     orderBy: [{ importance: "desc" }, { updatedAt: "desc" }],
+    take: 20,
   });
   return rows.map(asRecord);
 }

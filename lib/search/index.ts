@@ -5,9 +5,16 @@ import { requireUser } from "@/lib/auth/session";
 import { searchSchema } from "@/lib/validations/entities";
 import { formatShortDate } from "@/lib/utils/date";
 import type { SearchResult } from "@/types";
+import { assertRateLimit, RateLimitError } from "@/lib/security/rate-limit";
 
 export async function searchEverything(query: string): Promise<SearchResult[]> {
   const user = await requireUser();
+  try {
+    await assertRateLimit("search", user.id);
+  } catch (error) {
+    if (error instanceof RateLimitError) return [];
+    throw error;
+  }
   const parsed = searchSchema.safeParse({ query });
 
   if (!parsed.success) {
@@ -56,7 +63,6 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
         userId: user.id,
         OR: [
           { title: { contains: q, mode: "insensitive" } },
-          { content: { contains: q, mode: "insensitive" } },
           { preview: { contains: q, mode: "insensitive" } },
           { tags: { has: q } },
         ],

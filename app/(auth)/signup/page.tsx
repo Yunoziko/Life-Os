@@ -3,6 +3,7 @@ import { isGoogleAuthEnabled } from "@/lib/config";
 
 export const metadata = {
   title: "Create your AZIO account",
+  description: "Create an AZIO account to organize tasks, goals, projects, habits, notes, and calendar.",
 };
 
 export default function SignupPage() {

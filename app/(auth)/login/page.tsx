@@ -1,8 +1,10 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { isGoogleAuthEnabled } from "@/lib/config";
+import { safeInternalPath } from "@/lib/security/http";
 
 export const metadata = {
   title: "Sign in to AZIO",
+  description: "Sign in to AZIO to manage tasks, goals, projects, habits, notes, and calendar.",
 };
 
 export default async function LoginPage({
@@ -20,7 +22,7 @@ export default async function LoginPage({
           Sign in to AZIO. Your life, organized intelligently.
         </p>
       </div>
-      <LoginForm callbackUrl={callbackUrl} googleEnabled={isGoogleAuthEnabled()} />
+      <LoginForm callbackUrl={safeInternalPath(callbackUrl, "/dashboard")} googleEnabled={isGoogleAuthEnabled()} />
     </div>
   );
 }

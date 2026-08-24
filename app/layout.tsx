@@ -25,11 +25,14 @@ export const metadata: Metadata = {
     template: `%s · AZIO`,
   },
   description,
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
   openGraph: {
     title: "AZIO — Your life, organized intelligently.",
     description,
     siteName: "AZIO",
     type: "website",
+    url: "/",
   },
   twitter: {
     card: "summary",
@@ -45,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full font-sans antialiased">
+      <body className="min-h-full overflow-x-hidden font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

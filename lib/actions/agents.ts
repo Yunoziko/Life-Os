@@ -19,8 +19,8 @@ export async function confirmAgentRunAction(runId: string): Promise<ActionResult
     await syncAutomationRunFromAgent(runId, user.id);
     revalidateWorkspace(["/ai", "/automations", "/dashboard", "/notifications"]);
     return { ok: true, data: result };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Could not confirm that plan." };
+  } catch {
+    return { ok: false, error: "Could not confirm that plan." };
   }
 }
 
@@ -31,8 +31,8 @@ export async function cancelAgentRunAction(runId: string): Promise<ActionResult<
     await syncAutomationRunFromAgent(runId, user.id);
     revalidateWorkspace(["/ai", "/automations", "/dashboard", "/notifications"]);
     return { ok: true, data: result };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Could not cancel that plan." };
+  } catch {
+    return { ok: false, error: "Could not cancel that plan." };
   }
 }
 
@@ -46,8 +46,8 @@ export async function retryAgentRunAction(runId: string): Promise<ActionResult<A
     });
     revalidateWorkspace(["/ai", "/automations", "/dashboard"]);
     return { ok: true, data: result };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Could not retry that step." };
+  } catch {
+    return { ok: false, error: "Could not retry that step." };
   }
 }
 

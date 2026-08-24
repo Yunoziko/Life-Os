@@ -131,7 +131,17 @@ If a run stays **Queued**, the worker is not running.
 
 ### Worker health
 
-`GET /api/health/worker` returns worker status, queue depth, and last successful execution. Protect it with `CRON_SECRET` or `WORKER_HEALTH_SECRET`. In production it requires a bearer token or a signed-in session.
+`GET /api/health/worker` returns worker status, queue depth, and last tick. Protect it with `CRON_SECRET` or `WORKER_HEALTH_SECRET`. In production a bearer token is required; a signed-in session is not enough.
+
+### Health checks
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/health` | Liveness. Process is up. |
+| `GET /api/health/ready` | Readiness. Database ping. Returns 503 if the database is unreachable. |
+| `GET /api/health/worker` | Worker heartbeat and queue counts. Secret-protected. |
+
+Do not expose secrets or internal topology from these endpoints.
 
 ### Redis / BullMQ
 
@@ -226,3 +236,109 @@ Use live Razorpay keys, live plan IDs, and a HTTPS webhook URL. Keep `RAZORPAY_K
 ### Account deletion
 
 AZIO does not delete accounts in this release. If deletion is added later, `cancelPaidSubscriptionsForDeletedUser()` must run first so an active Razorpay subscription is not left charging.
+
+## Architecture
+
+```
+Browser  →  Next.js App Router (pages + server actions)
+         →  Auth.js JWT session (trusted user id)
+         →  Prisma / PostgreSQL
+
+API      →  /api/auth/*           Auth.js
+         →  /api/ai/chat          AZIO AI (registered tools only)
+         →  /api/razorpay/webhook HMAC-verified billing
+         →  /api/integrations/*   Google / GitHub OAuth (tokens never sent to the browser)
+         →  /api/cron/automations secret-only enqueue
+         →  /api/health*          liveness / readiness / worker
+
+Worker   →  claims AutomationRun rows with FOR UPDATE SKIP LOCKED
+Scheduler→  enqueues due scheduled automations (can run inside the worker)
+```
+
+Ownership is always `id + userId` (or equivalent). Server operations derive the user from the Auth.js session, never from a client-supplied `userId`.
+
+## Environment
+
+Copy `.env.example` to `.env`. Never commit `.env` or live credentials.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | PostgreSQL |
+| `AUTH_SECRET` | yes | Auth.js JWT signing |
+| `AUTH_URL` | yes | Public origin, HTTPS in production |
+| `INTEGRATION_ENCRYPTION_KEY` | production | AES-256-GCM for OAuth tokens. Locally `AUTH_SECRET` is a fallback. |
+| `CRON_SECRET` | production | Bearer token for cron + worker health |
+| `AI_API_KEY` / provider keys | for AI | Server-only |
+| `RAZORPAY_*` | for billing | Test keys locally, live keys only on the server |
+| `AUTH_GOOGLE_*` / `GITHUB_*` | for OAuth | Redirect URIs listed in `.env.example` |
+| `ALLOWED_ORIGINS` | optional | Extra browser origins for AI CORS checks |
+| `RATE_LIMIT_*` | optional | Override default buckets |
+
+`NODE_ENV=production` tightens cron authorization, HSTS, and encryption-key requirements. Do not run production with debug logging of request bodies.
+
+## OAuth setup
+
+- Google Calendar / Gmail: authorized redirect `{AUTH_URL}/api/integrations/google/callback`
+- GitHub: `{AUTH_URL}/api/integrations/github/callback`
+- Tokens are encrypted at rest and never returned to the client
+- Disconnect wipes stored tokens and best-effort revokes Google / GitHub access
+- Expired tokens surface a reconnect message; they are not retried forever
+
+## Security considerations
+
+- Protected pages require a session (`proxy.ts`). APIs authenticate independently.
+- Cron and worker health **must** use `Authorization: Bearer $CRON_SECRET` in production. Sessions cannot enqueue other users’ automations.
+- Razorpay webhooks verify HMAC of the raw body and are idempotent (`BillingWebhookEvent.eventKey`).
+- AI system instructions live on the server. Tools are a registry; SQL, shell, eval, and billing tools are forbidden.
+- External content (Gmail, GitHub, calendar, notes) is wrapped as untrusted data.
+- Agents cap at 10 steps and 45 seconds. Destructive tools require confirmation.
+- Automations check ownership, Pro entitlement, enabled state, idempotency, retries (3), and a 55s execution timeout.
+- Rate limits cover login, signup, AI, agents, automations, billing, Gmail, GitHub, and search. The default store is in-process memory. Multi-instance production should put a Redis-backed store behind `getCache()` (`REDIS_URL` is reserved; it is not wired yet).
+- Security headers include CSP (Razorpay Checkout + Google avatars allowed), `nosniff`, Referrer-Policy, Permissions-Policy, and HSTS in production.
+- CORS is origin-allowlist based (`AUTH_URL`, localhost, `ALLOWED_ORIGINS`). There is no `Access-Control-Allow-Origin: *`.
+- CSRF: Auth.js cookies + Next.js server-action origin checks. Do not add a second CSRF token stack.
+- Password reset is **not** implemented.
+
+## Deployment architecture
+
+Recommended processes:
+
+1. **Web** — `npm run build && npm run start`
+2. **Worker** — `npm run worker` (includes scheduler unless `AUTOMATION_WORKER_INCLUDE_SCHEDULER=0`)
+3. **Scheduler** — optional split: `npm run scheduler`
+
+Put PostgreSQL behind TLS. Terminate HTTPS at the load balancer. Set `AUTH_URL` to the public HTTPS origin.
+
+Health:
+
+- Load balancer liveness: `GET /api/health`
+- Readiness before traffic: `GET /api/health/ready`
+- Worker probe (secret): `GET /api/health/worker`
+
+## Database backups
+
+AZIO **does not** implement backups. PostgreSQL backups are an operator responsibility.
+
+Recommended:
+
+- **Frequency:** daily full backup, plus continuous WAL / point-in-time recovery if the host supports it (for example managed Postgres PITR).
+- **Retention:** at least 7 days; 30 days for production billing data.
+- **Recovery expectation:** restore a recent backup, run pending Prisma migrations (`npm run db:migrate` / `prisma migrate deploy`), then start web + worker. Expect minutes to hours depending on database size, not instant failover, unless you add a replica yourself.
+- **Migration strategy:** Prisma migrations in `prisma/migrations`. Apply with `prisma migrate deploy` in production. Never `db push` against production. Test migrations against a copy of production data first.
+- **Secrets:** backup encryption keys (`AUTH_SECRET`, `INTEGRATION_ENCRYPTION_KEY`) separately from the database. Lost encryption keys make stored OAuth tokens unreadable.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| Automation stays Queued | Worker is not running |
+| `INTEGRATION_ENCRYPTION_KEY is not set` | Required in production; set a dedicated 32-byte secret |
+| Cron 401 | Missing `Authorization: Bearer $CRON_SECRET` |
+| Health ready 503 | Database unreachable |
+| Pro not unlocking after Checkout | Webhook secret/URL mismatch, or signature failed |
+| Google / GitHub reconnect prompt | Token expired or revoked; reconnect in Settings |
+| Rate limit errors | Tune `RATE_LIMIT_*` or wait for the window |
+| AI “Something went wrong. Reference: …” | Check structured logs for the same request id |
+
+Errors shown to users are generic. Logs include `requestId` / `user` (short ref) / `route` / `status` / `duration` and never OAuth tokens, API keys, passwords, full email bodies, or Razorpay secrets.
+

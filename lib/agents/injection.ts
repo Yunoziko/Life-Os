@@ -25,9 +25,16 @@ export function wrapUntrustedData(source: string, content: string) {
 
 export function sanitizeToolPayload(tool: string, data: unknown): unknown {
   if (data === null || data === undefined) return data;
-  const untrusted = ["search_emails", "search_gmail", "search_notes", "get_open_issues", "get_pull_requests"].includes(
-    tool
-  );
+  const untrusted = [
+    "search_emails",
+    "search_gmail",
+    "search_notes",
+    "get_open_issues",
+    "get_pull_requests",
+    "get_upcoming_events",
+    "get_today_schedule",
+    "get_recent_commits",
+  ].includes(tool);
   if (!untrusted) return data;
   if (typeof data === "string") {
     return wrapUntrustedData(tool, looksLikePromptInjection(data) ? "[redacted untrusted instructions]" : data);

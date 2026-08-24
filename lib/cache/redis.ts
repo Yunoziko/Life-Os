@@ -2,6 +2,7 @@ export interface CacheStore {
   get<T>(key: string): Promise<T | null>;
   set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
   del(key: string): Promise<void>;
+  incr(key: string, ttlSeconds?: number): Promise<number>;
 }
 
 class MemoryCache implements CacheStore {
@@ -26,6 +27,13 @@ class MemoryCache implements CacheStore {
 
   async del(key: string) {
     this.store.delete(key);
+  }
+
+  async incr(key: string, ttlSeconds?: number) {
+    const current = (await this.get<number>(key)) ?? 0;
+    const next = current + 1;
+    await this.set(key, next, ttlSeconds);
+    return next;
   }
 }
 

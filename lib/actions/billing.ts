@@ -7,8 +7,10 @@ import type { BillingIntervalId } from "@/lib/billing/config";
 import type { ActionResult } from "@/types";
 import type { CheckoutSession } from "@/lib/billing/errors";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import { assertRateLimit, RateLimitError } from "@/lib/security/rate-limit";
 
 function friendly(error: unknown) {
+  if (error instanceof RateLimitError) return error.message;
   if (error instanceof BillingError) return error.message;
   return "AZIO couldn’t complete that billing request. Try again in a moment.";
 }
@@ -18,6 +20,7 @@ export async function startProCheckoutAction(
 ): Promise<ActionResult<CheckoutSession>> {
   try {
     const user = await requireUser();
+    await assertRateLimit("billing", user.id);
     const safeInterval: BillingIntervalId = interval === "ANNUAL" ? "ANNUAL" : "MONTHLY";
     const session = await startProCheckout({
       userId: user.id,
@@ -34,6 +37,7 @@ export async function startProCheckoutAction(
 export async function cancelSubscriptionAction(): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    await assertRateLimit("billing", user.id);
     await cancelOwnedSubscription(user.id);
     revalidateWorkspace(["/settings/billing", "/dashboard"]);
     return { ok: true };
@@ -45,6 +49,7 @@ export async function cancelSubscriptionAction(): Promise<ActionResult> {
 export async function syncSubscriptionAction(): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    await assertRateLimit("billing", user.id);
     await syncOwnedSubscription(user.id);
     return { ok: true };
   } catch (error) {

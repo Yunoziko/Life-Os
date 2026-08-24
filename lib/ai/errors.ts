@@ -36,6 +36,9 @@ export class AIError extends Error {
 
   static fromUnknown(error: unknown): AIError {
     if (error instanceof AIError) return error;
+    if (error && typeof error === "object" && "name" in error && error.name === "RateLimitError") {
+      return new AIError("rate_limit");
+    }
     if (error && typeof error === "object" && "name" in error && error.name === "EntitlementError") {
       const feature = "feature" in error ? String(error.feature) : "";
       if (feature === "AI_MESSAGES") return new AIError("quota", (error as Error).message);

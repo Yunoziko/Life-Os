@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
 import { getAssignableOptions } from "@/lib/db/tasks";
 import { AppShell } from "@/components/layout/app-shell";
 import { getBillingChrome } from "@/lib/billing/entitlements";
 import { listNotifications, unreadNotificationCount } from "@/lib/notifications/service";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
+};
 
 export default async function DashboardLayout({
   children,

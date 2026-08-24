@@ -7,7 +7,9 @@ const MAX_AGE = 60 * 10;
 const SLUGS = new Set<IntegrationSlug>(["google-calendar", "gmail", "github"]);
 
 function secret() {
-  return process.env.INTEGRATION_ENCRYPTION_KEY?.trim() || process.env.AUTH_SECRET?.trim() || "";
+  const dedicated = process.env.INTEGRATION_ENCRYPTION_KEY?.trim();
+  const fallback = process.env.AUTH_SECRET?.trim();
+  return (process.env.NODE_ENV === "production" ? dedicated : dedicated || fallback) || "";
 }
 
 function sign(value: string) {

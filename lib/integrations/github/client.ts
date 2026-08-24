@@ -2,8 +2,17 @@ import { getCache } from "@/lib/cache/redis";
 import { prisma } from "@/lib/db/prisma";
 import { getAccessToken, isIntegrationConnected, markIntegrationError } from "@/lib/integrations/accounts";
 import { IntegrationError } from "@/lib/integrations/errors";
+import { assertRateLimit, RateLimitError } from "@/lib/security/rate-limit";
 
 async function githubFetch(userId: string, path: string) {
+  try {
+    await assertRateLimit("github", userId);
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      throw new IntegrationError("rate_limit", "GitHub requests are paused for a moment. Try again shortly.");
+    }
+    throw error;
+  }
   const account = await getAccessToken(userId, "GITHUB");
   const response = await fetch(`https://api.github.com${path}`, {
     headers: {
@@ -19,6 +28,9 @@ async function githubFetch(userId: string, path: string) {
   if (response.status === 401) {
     await markIntegrationError(userId, "GITHUB", "GitHub needs to be reconnected.");
     throw new IntegrationError("expired", "GitHub needs to be reconnected in Settings → Integrations.");
+  }
+  if (response.status === 429) {
+    throw new IntegrationError("rate_limit", "GitHub asked AZIO to wait. Try again in a minute.");
   }
   if (response.status === 403) {
     const remaining = response.headers.get("x-ratelimit-remaining");

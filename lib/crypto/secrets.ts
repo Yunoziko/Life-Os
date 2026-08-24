@@ -3,7 +3,9 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 const PREFIX = "v1";
 
 function getKey() {
-  const raw = process.env.INTEGRATION_ENCRYPTION_KEY?.trim() || process.env.AUTH_SECRET?.trim();
+  const dedicated = process.env.INTEGRATION_ENCRYPTION_KEY?.trim();
+  const fallback = process.env.AUTH_SECRET?.trim();
+  const raw = process.env.NODE_ENV === "production" ? dedicated : dedicated || fallback;
   if (!raw) {
     throw new Error("INTEGRATION_ENCRYPTION_KEY is not set.");
   }
@@ -11,6 +13,9 @@ function getKey() {
 }
 
 export function isSecretEncryptionConfigured() {
+  if (process.env.NODE_ENV === "production") {
+    return Boolean(process.env.INTEGRATION_ENCRYPTION_KEY?.trim());
+  }
   return Boolean(process.env.INTEGRATION_ENCRYPTION_KEY?.trim() || process.env.AUTH_SECRET?.trim());
 }
 
