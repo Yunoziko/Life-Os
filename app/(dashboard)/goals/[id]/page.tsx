@@ -60,6 +60,10 @@ export default async function GoalDetailPage({
           id: habit.id,
           name: habit.name,
         })),
+        notes: goal.notes.map((note) => ({
+          ...note,
+          updatedAt: note.updatedAt.toISOString(),
+        })),
       }}
       projects={projects}
       timezone={timezone}

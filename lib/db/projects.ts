@@ -55,6 +55,12 @@ export async function getProjectWorkspace(userId: string, id: string) {
         },
         orderBy: [{ createdAt: "desc" }],
       },
+      notes: {
+        where: { archived: false },
+        select: { id: true, title: true, preview: true, updatedAt: true, pinned: true },
+        orderBy: [{ pinned: "desc" }, { updatedAt: "desc" }],
+        take: 8,
+      },
     },
   });
 

@@ -23,7 +23,9 @@ import { useWorkspace } from "@/components/workspace-provider";
 import { projectAccent, PROJECT_STATUS_LABEL } from "@/lib/projects/labels";
 import { ProjectGlyph } from "@/components/projects/project-glyph";
 import { calendarDate, formatShortDate } from "@/lib/utils/date";
+import { RelatedNotes } from "@/components/notes/related-notes";
 import { cn } from "@/lib/utils";
+import type { RelatedNoteCard } from "@/components/notes/related-notes";
 import type { ClientTask } from "@/lib/tasks/serialize";
 import type { AssignableGoal, AssignableProject } from "@/lib/db/tasks";
 import type { ProjectStatus } from "@/generated/prisma/enums";
@@ -46,12 +48,14 @@ export type ProjectWorkspaceData = {
 export function ProjectWorkspace({
   project,
   tasks,
+  notes,
   projects,
   goals,
   timezone,
 }: {
   project: ProjectWorkspaceData;
   tasks: ClientTask[];
+  notes: RelatedNoteCard[];
   projects: AssignableProject[];
   goals: AssignableGoal[];
   timezone: string;
@@ -131,6 +135,7 @@ export function ProjectWorkspace({
         <TabsList variant="line" className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="goals">Goals</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
@@ -179,6 +184,12 @@ export function ProjectWorkspace({
             timezone={timezone}
             defaultProjectId={project.id}
           />
+        </TabsContent>
+
+        <TabsContent value="notes" className="pt-5">
+          <section className="rounded-2xl border border-border/70 bg-card p-5">
+            <RelatedNotes notes={notes} timezone={timezone} />
+          </section>
         </TabsContent>
 
         <TabsContent value="goals" className="pt-5">

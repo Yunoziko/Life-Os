@@ -24,6 +24,15 @@ export const updateTaskSchema = createTaskSchema.extend({
 export const createNoteSchema = z.object({
   title: z.string().trim().min(1, "Give this note a title.").max(160),
   content: z.string().max(20_000).optional().or(z.literal("")),
+  projectId: emptyToUndefined,
+  goalId: emptyToUndefined,
+  tags: z.string().max(200).optional().or(z.literal("")),
+});
+
+export const updateNoteSchema = createNoteSchema.extend({
+  id: z.string().uuid(),
+  pinned: z.enum(["true", "false"]).optional(),
+  archived: z.enum(["true", "false"]).optional(),
 });
 
 export const createGoalSchema = z.object({
@@ -98,9 +107,23 @@ export const habitLogSchema = z.object({
 
 export const createEventSchema = z.object({
   title: z.string().trim().min(1, "Give this event a name.").max(160),
-  startAt: z.string().min(1, "Choose a start time."),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  date: z.string().optional().or(z.literal("")),
+  startTime: z.string().optional().or(z.literal("")),
+  endTime: z.string().optional().or(z.literal("")),
+  allDay: z.enum(["true", "on", "false"]).optional(),
+  location: emptyToUndefined,
+  color: emptyToUndefined,
+  projectId: emptyToUndefined,
+  goalId: emptyToUndefined,
+  recurrence: emptyToUndefined,
+  reminderMinutes: z.coerce.number().int().min(0).max(10_080).optional(),
+  startAt: z.string().optional().or(z.literal("")),
   endAt: z.string().optional().or(z.literal("")),
-  allDay: z.literal("on").optional(),
+});
+
+export const updateEventSchema = createEventSchema.extend({
+  id: z.string().uuid(),
 });
 
 export const searchSchema = z.object({
@@ -109,6 +132,8 @@ export const searchSchema = z.object({
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
+export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
+export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 export type CreateGoalInput = z.infer<typeof createGoalSchema>;
 export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;

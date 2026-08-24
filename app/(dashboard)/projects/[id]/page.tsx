@@ -42,6 +42,10 @@ export default async function ProjectDetailPage({
         goal: project.goal,
       }}
       tasks={serializeTasks(project.tasks)}
+      notes={project.notes.map((note) => ({
+        ...note,
+        updatedAt: note.updatedAt.toISOString(),
+      }))}
       projects={projects}
       goals={goals}
       timezone={timezone}

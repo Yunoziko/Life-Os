@@ -2,8 +2,18 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
-import { createEventSchema, createNoteSchema } from "@/lib/validations/entities";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
+import {
+  createEventAction as persistEvent,
+  updateEventAction as persistEventUpdate,
+  deleteEventAction as persistEventDelete,
+} from "@/lib/actions/events";
+import {
+  createNoteAction as persistNote,
+  createBlankNoteAction as persistBlankNote,
+  updateNoteAction as persistNoteUpdate,
+  deleteNoteAction as persistNoteDelete,
+} from "@/lib/actions/notes";
 import {
   createTaskAction as persistTask,
   updateTaskAction as persistTaskUpdate,
@@ -101,28 +111,20 @@ export async function deleteHabitAction(habitId: string) {
   return persistHabitDelete(habitId);
 }
 
-export async function createNoteAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createNoteSchema.safeParse({
-    title: formData.get("title"),
-    content: formData.get("content"),
-  });
+export async function createNoteAction(formData: FormData) {
+  return persistNote(formData);
+}
 
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create note." };
-  }
+export async function createBlankNoteAction() {
+  return persistBlankNote();
+}
 
-  const note = await prisma.note.create({
-    data: {
-      userId: user.id,
-      title: parsed.data.title,
-      content: parsed.data.content ?? "",
-    },
-    select: { id: true },
-  });
+export async function updateNoteAction(formData: FormData) {
+  return persistNoteUpdate(formData);
+}
 
-  revalidateWorkspace();
-  return { ok: true, data: note };
+export async function deleteNoteAction(noteId: string) {
+  return persistNoteDelete(noteId);
 }
 
 
@@ -159,42 +161,14 @@ export async function completeTaskAction(taskId: string): Promise<ActionResult<{
 }
 
 
-export async function createEventAction(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await requireUser();
-  const parsed = createEventSchema.safeParse({
-    title: formData.get("title"),
-    startAt: formData.get("startAt"),
-    endAt: formData.get("endAt"),
-    allDay: formData.get("allDay") === "on" ? "on" : undefined,
-  });
+export async function createEventAction(formData: FormData) {
+  return persistEvent(formData);
+}
 
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Could not create event." };
-  }
+export async function updateEventAction(formData: FormData) {
+  return persistEventUpdate(formData);
+}
 
-  const allDay = parsed.data.allDay === "on";
-  const startAt = new Date(parsed.data.startAt);
-  const endAt = parsed.data.endAt ? new Date(parsed.data.endAt) : null;
-
-  if (Number.isNaN(startAt.getTime())) {
-    return { ok: false, error: "Choose a valid start time." };
-  }
-
-  if (endAt && Number.isNaN(endAt.getTime())) {
-    return { ok: false, error: "Choose a valid end time." };
-  }
-
-  const event = await prisma.calendarEvent.create({
-    data: {
-      userId: user.id,
-      title: parsed.data.title,
-      startAt,
-      endAt,
-      allDay,
-    },
-    select: { id: true },
-  });
-
-  revalidateWorkspace();
-  return { ok: true, data: event };
+export async function deleteEventAction(eventId: string) {
+  return persistEventDelete(eventId);
 }

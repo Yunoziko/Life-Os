@@ -35,7 +35,9 @@ import { PROJECT_STATUS_LABEL } from "@/lib/projects/labels";
 import { calendarDate, formatRelativeDeadline, formatShortDate } from "@/lib/utils/date";
 import { TASK_PRIORITY_LABEL, TASK_STATUS_LABEL } from "@/lib/tasks/labels";
 import { cn } from "@/lib/utils";
+import { RelatedNotes } from "@/components/notes/related-notes";
 import type { AssignableProject } from "@/lib/db/tasks";
+import type { RelatedNoteCard } from "@/components/notes/related-notes";
 import type { GoalPriority, GoalStatus, TaskPriority, TaskStatus } from "@/generated/prisma/enums";
 
 type Milestone = {
@@ -85,6 +87,7 @@ export function GoalWorkspace({
     tasks: RelatedTask[];
     projects: RelatedProject[];
     habits: RelatedHabit[];
+    notes: RelatedNoteCard[];
   };
   projects: AssignableProject[];
   timezone: string;
@@ -168,6 +171,7 @@ export function GoalWorkspace({
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="tasks">Related Tasks</TabsTrigger>
           <TabsTrigger value="projects">Related Projects</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -276,6 +280,12 @@ export function GoalWorkspace({
                 ))}
               </ul>
             )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="notes" className="pt-5">
+          <section className="rounded-2xl border border-border/70 bg-card p-5">
+            <RelatedNotes notes={goal.notes} timezone={timezone} />
           </section>
         </TabsContent>
 

@@ -114,11 +114,14 @@ export function GlobalSearch() {
                   }}
                 >
                   <Icon />
-                  <span className="flex min-w-0 flex-col">
+                  <span className="flex min-w-0 flex-1 flex-col">
                     <span>{result.title}</span>
                     {result.subtitle ? (
                       <span className="text-xs text-muted-foreground">{result.subtitle}</span>
                     ) : null}
+                  </span>
+                  <span className="text-[10px] tracking-[0.12em] text-muted-foreground">
+                    {result.type.toUpperCase()}
                   </span>
                 </CommandItem>
               );

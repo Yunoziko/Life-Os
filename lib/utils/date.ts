@@ -24,6 +24,22 @@ export function formatShortDate(date: Date, timeZone = "UTC") {
   }).format(date);
 }
 
+export function formatClock(date: Date, timeZone = "UTC") {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+}
+
+export function formatWeekday(date: Date, timeZone = "UTC", width: "short" | "long" = "short") {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: width,
+  }).format(date);
+}
+
 export function formatTime(date: Date, timeZone = "UTC") {
   return new Intl.DateTimeFormat("en-US", {
     timeZone,

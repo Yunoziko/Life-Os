@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { appCommands } from "@/lib/commands/registry";
+import { createBlankNoteAction } from "@/lib/actions/entities";
 import { useWorkspace } from "@/components/workspace-provider";
 import {
   CommandDialog,
@@ -53,6 +54,13 @@ export function CommandPalette() {
                     key={command.id}
                     value={`${command.label} ${command.keywords.join(" ")}`}
                     onSelect={() => {
+                      if (command.id === "create-note") {
+                        void createBlankNoteAction().then((result) => {
+                          setCommandOpen(false);
+                          if (result.ok && result.data?.id) router.push(`/notes/${result.data.id}`);
+                        });
+                        return;
+                      }
                       if (command.action.kind === "create") {
                         openCreate(command.action.type);
                         return;

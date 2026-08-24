@@ -1,13 +1,17 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { isTypingTarget } from "@/lib/utils/keyboard";
+import { createBlankNoteAction } from "@/lib/actions/entities";
 import type { AssignableGoal, AssignableProject } from "@/lib/db/tasks";
 import type { CreateEntityType } from "@/types";
 
 export type CreateDefaults = {
   projectId?: string;
   goalId?: string;
+  date?: string;
+  startTime?: string;
 };
 
 type WorkspaceContextValue = {
@@ -41,6 +45,8 @@ export function WorkspaceProvider({
   const [searchOpen, setSearchOpen] = useState(false);
   const [createType, setCreateType] = useState<CreateEntityType | null>(null);
   const [createDefaults, setCreateDefaults] = useState<CreateDefaults>({});
+  const pathname = usePathname();
+  const router = useRouter();
   const [pageDefaults, setPageDefaultsState] = useState<CreateDefaults>({});
 
   const openCreate = useCallback((type: CreateEntityType, defaults?: CreateDefaults) => {
@@ -67,12 +73,22 @@ export function WorkspaceProvider({
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key.toLowerCase() !== "n") return;
       event.preventDefault();
+      if (pathname.startsWith("/notes")) {
+        void createBlankNoteAction().then((result) => {
+          if (result.ok && result.data?.id) router.push(`/notes/${result.data.id}`);
+        });
+        return;
+      }
+      if (pathname.startsWith("/calendar")) {
+        openCreate("event");
+        return;
+      }
       openCreate("task");
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [openCreate]);
+  }, [openCreate, pathname, router]);
 
   const value = useMemo(
     () => ({

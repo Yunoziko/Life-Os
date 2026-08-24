@@ -23,10 +23,12 @@ export type DashboardGoal = {
 
 export type DashboardEvent = {
   id: string;
+  kind: "event" | "task";
   title: string;
   startAt: Date;
   endAt: Date | null;
   allDay: boolean;
+  href: string;
 };
 
 export type DashboardHabit = {
@@ -79,6 +81,7 @@ export async function getDashboardData(
     habits,
     counts,
     activeProject,
+    upcomingTasks,
   ] = await Promise.all([
     prisma.task.findMany({
       where: {
@@ -176,6 +179,16 @@ export async function getDashboardData(
       },
       orderBy: { updatedAt: "desc" },
     }),
+    prisma.task.findMany({
+      where: {
+        userId,
+        status: { not: "CANCELLED" },
+        dueAt: { gte: start, lte: upcomingLimit },
+      },
+      select: { id: true, title: true, dueAt: true },
+      orderBy: { dueAt: "asc" },
+      take: 8,
+    }),
   ]);
 
   const todayTasks: DashboardTask[] = rawTasks
@@ -245,13 +258,30 @@ export async function getDashboardData(
       progress: goal.progress,
       targetDate: goal.targetDate,
     })),
-    upcomingEvents: upcomingEvents.map((event) => ({
-      id: event.id,
-      title: event.title,
-      startAt: event.startAt,
-      endAt: event.endAt,
-      allDay: event.allDay,
-    })),
+    upcomingEvents: [
+      ...upcomingEvents.map((event) => ({
+        id: event.id,
+        kind: "event" as const,
+        title: event.title,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        allDay: event.allDay,
+        href: `/calendar?date=${calendarDate(timeZone, event.startAt)}&event=${event.id}&view=day`,
+      })),
+      ...upcomingTasks
+        .filter((task): task is typeof task & { dueAt: Date } => Boolean(task.dueAt))
+        .map((task) => ({
+          id: task.id,
+          kind: "task" as const,
+          title: task.title,
+          startAt: task.dueAt,
+          endAt: null,
+          allDay: false,
+          href: `/tasks/${task.id}`,
+        })),
+    ]
+      .sort((a, b) => a.startAt.getTime() - b.startAt.getTime())
+      .slice(0, 8),
     habits: mappedHabits,
   };
 }

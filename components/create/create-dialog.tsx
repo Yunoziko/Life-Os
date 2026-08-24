@@ -17,6 +17,7 @@ import { TaskFormFields } from "@/components/tasks/task-form-fields";
 import { ProjectFormFields } from "@/components/projects/project-form-fields";
 import { GoalForm, goalValuesToFormData, type GoalFormValues } from "@/components/goals/goal-form";
 import { HabitForm, habitValuesToFormData } from "@/components/habits/habit-form";
+import { EventForm, eventValuesToFormData, type EventFormValues } from "@/components/calendar/event-form";
 import type { CreateHabitInput } from "@/lib/validations/entities";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ function shouldStay(type: CreateEntityType, pathname: string) {
   if (type === "project" && pathname.startsWith("/projects")) return true;
   if ((type === "goal" || type === "milestone") && pathname.startsWith("/goals")) return true;
   if (type === "habit" && pathname.startsWith("/habits")) return true;
+  if (type === "event" && pathname.startsWith("/calendar")) return true;
   return false;
 }
 
@@ -97,7 +99,10 @@ export function CreateDialog() {
   const [pending, setPending] = useState(false);
   const mobile = useMediaQuery("(max-width: 639px)");
 
-  async function finish(type: CreateEntityType, result: { ok: true } | { ok: false; error: string }) {
+  async function finish(
+    type: CreateEntityType,
+    result: { ok: true; data?: { id?: string } } | { ok: false; error: string }
+  ) {
     setPending(false);
     if (!result.ok) {
       toast.error(result.error);
@@ -106,6 +111,10 @@ export function CreateDialog() {
     toast.success(`${copy[type].title} created`);
     closeCreate();
     router.refresh();
+    if (type === "note" && result.data?.id) {
+      router.push(`/notes/${result.data.id}`);
+      return;
+    }
     if (!shouldStay(type, pathname)) {
       router.push(copy[type].href);
     }
@@ -121,6 +130,12 @@ export function CreateDialog() {
     setPending(true);
     const result = await createHabitAction(habitValuesToFormData(values));
     await finish("habit", result);
+  }
+
+  async function onCreateEvent(values: EventFormValues) {
+    setPending(true);
+    const result = await createEventAction(eventValuesToFormData(values));
+    await finish("event", result);
   }
 
   async function onSubmit(formData: FormData) {
@@ -159,6 +174,21 @@ export function CreateDialog() {
         submitLabel="Create"
         onCancel={closeCreate}
         onSubmit={onCreateHabit}
+      />
+    ) : createType === "event" ? (
+      <EventForm
+        values={{
+          date: createDefaults.date,
+          startTime: createDefaults.startTime,
+          projectId: createDefaults.projectId,
+          goalId: createDefaults.goalId,
+        }}
+        projects={assignable.projects}
+        goals={assignable.goals}
+        pending={pending}
+        submitLabel="Create"
+        onCancel={closeCreate}
+        onSubmit={onCreateEvent}
       />
     ) : createType ? (
       <form action={onSubmit} className="grid gap-4">
@@ -248,20 +278,6 @@ function CreateFields({
     );
   }
 
-  if (type === "event") {
-    return (
-      <>
-        <Field id="entity-title" name="title" label="Title" placeholder="Design review" />
-        <Field id="entity-start" name="startAt" label="Starts" type="datetime-local" />
-        <Field id="entity-end" name="endAt" label="Ends" type="datetime-local" required={false} />
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" name="allDay" className="size-4 rounded border-input" />
-          All day
-        </label>
-      </>
-    );
-  }
-
   if (type === "task") {
     return (
       <TaskFormFields
@@ -285,19 +301,39 @@ function CreateFields({
     <>
       <Field
         id="entity-title"
-        name={type === "goal" ? "title" : "title"}
+        name="title"
         label="Title"
         placeholder={type === "note" ? "Ideas for Sunday" : "Ship LifeOS foundation"}
       />
 
-      {type === "goal" ? (
-        <Field
-          id="entity-date"
-          name="targetDate"
-          label="Target date"
-          type="date"
-          required={false}
-        />
+      {type === "note" ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="note-project">Project</Label>
+              <NativeSelect id="note-project" name="projectId" defaultValue={defaults.projectId ?? ""}>
+                <option value="">No project</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="note-goal">Goal</Label>
+              <NativeSelect id="note-goal" name="goalId" defaultValue={defaults.goalId ?? ""}>
+                <option value="">No goal</option>
+                {goals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+          </div>
+          <Field id="note-tags" name="tags" label="Tags" placeholder="ideas, launch" required={false} />
+        </>
       ) : null}
 
       <div className="grid gap-2">
