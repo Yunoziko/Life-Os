@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { isForbiddenTool, isRegisteredTool, toolPermission } from "../agents/permissions";
 import { looksLikePromptInjection, wrapUntrustedData, sanitizeToolPayload } from "../agents/injection";
-import { PLAN_CATALOG } from "../billing/config";
+import { PLAN_CATALOG, isLiveRazorpayKey, liveRazorpayPaymentsAllowed } from "../billing/config";
 import { planHasFeature, planLimit } from "../billing/rules";
 import { verifyRazorpayWebhookSignature } from "../billing/provider";
 import { createHmac } from "node:crypto";
+import { PRODUCTION_ORIGIN } from "../config";
 import { searchSchema } from "../validations/entities";
 import { memoryOwnerFilter } from "../memory/types";
 import { decideMemoryWrite } from "../memory/write-policy";
@@ -141,6 +142,18 @@ test("trusted origins reject foreign sites", () => {
   assert.equal(isTrustedOrigin(null), true);
   assert.equal(isTrustedOrigin("http://localhost:3000"), true);
   assert.equal(isTrustedOrigin("https://evil.example"), false);
+});
+
+test("canonical production origin is azio.fun", () => {
+  assert.equal(PRODUCTION_ORIGIN, "https://azio.fun");
+});
+
+test("live Razorpay keys stay off until explicitly allowed", () => {
+  assert.equal(isLiveRazorpayKey("rzp_live_placeholder"), true);
+  assert.equal(isLiveRazorpayKey("rzp_test_placeholder"), false);
+  if (process.env.AZIO_ALLOW_LIVE_PAYMENTS !== "true") {
+    assert.equal(liveRazorpayPaymentsAllowed(), false);
+  }
 });
 
 test("bearer comparison does not leak length mismatches as true", () => {

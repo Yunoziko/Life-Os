@@ -51,6 +51,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.azio.fun" }],
+        destination: "https://azio.fun/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

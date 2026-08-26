@@ -81,6 +81,16 @@ export async function processOneAutomationJob(workerId: string) {
   }
 }
 
+export async function drainQueuedAutomationJobs(limit = 3) {
+  let processed = 0;
+  for (let i = 0; i < limit; i += 1) {
+    const worked = await processOneAutomationJob(`cron-${process.pid}`);
+    if (!worked) break;
+    processed += 1;
+  }
+  return processed;
+}
+
 export async function startAutomationWorker(options?: { includeScheduler?: boolean }) {
   const includeScheduler = options?.includeScheduler ?? process.env.AUTOMATION_WORKER_INCLUDE_SCHEDULER !== "0";
   const concurrency = workerConcurrency();

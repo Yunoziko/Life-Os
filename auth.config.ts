@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import { isProtectedPath } from "@/lib/navigation";
 
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

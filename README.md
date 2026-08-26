@@ -231,7 +231,13 @@ A successful Checkout in the browser is **not** enough to grant Pro. The verifie
 
 ### Production
 
-Use live Razorpay keys, live plan IDs, and a HTTPS webhook URL. Keep `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` on the server only.
+Keep **TEST** keys (`rzp_test_…`) until live charges are explicitly approved.
+
+Live keys (`rzp_live_…`) are ignored unless `AZIO_ALLOW_LIVE_PAYMENTS=true` is set on the server. Webhook URL for both modes:
+
+`https://azio.fun/api/razorpay/webhook`
+
+Keep `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` on the server only. A successful Checkout does not grant Pro until the verified webhook runs.
 
 ### Account deletion
 
@@ -265,11 +271,11 @@ Copy `.env.example` to `.env`. Never commit `.env` or live credentials.
 | --- | --- | --- |
 | `DATABASE_URL` | yes | PostgreSQL |
 | `AUTH_SECRET` | yes | Auth.js JWT signing |
-| `AUTH_URL` | yes | Public origin, HTTPS in production |
+| `AUTH_URL` | yes | Public origin. Production: `https://azio.fun` |
 | `INTEGRATION_ENCRYPTION_KEY` | production | AES-256-GCM for OAuth tokens. Locally `AUTH_SECRET` is a fallback. |
 | `CRON_SECRET` | production | Bearer token for cron + worker health |
 | `AI_API_KEY` / provider keys | for AI | Server-only |
-| `RAZORPAY_*` | for billing | Test keys locally, live keys only on the server |
+| `RAZORPAY_*` | for billing | Test keys (`rzp_test_`) until `AZIO_ALLOW_LIVE_PAYMENTS=true` |
 | `AUTH_GOOGLE_*` / `GITHUB_*` | for OAuth | Redirect URIs listed in `.env.example` |
 | `ALLOWED_ORIGINS` | optional | Extra browser origins for AI CORS checks |
 | `RATE_LIMIT_*` | optional | Override default buckets |
@@ -278,16 +284,62 @@ Copy `.env.example` to `.env`. Never commit `.env` or live credentials.
 
 ## OAuth setup
 
-- Google Calendar / Gmail: authorized redirect `{AUTH_URL}/api/integrations/google/callback`
-- GitHub: `{AUTH_URL}/api/integrations/github/callback`
-- Tokens are encrypted at rest and never returned to the client
-- Disconnect wipes stored tokens and best-effort revokes Google / GitHub access
-- Expired tokens surface a reconnect message; they are not retried forever
+Production origin: `https://azio.fun`
+
+Google Cloud (same client as login + Calendar/Gmail):
+
+- JavaScript origins: `https://azio.fun`, `https://www.azio.fun`
+- Redirect URIs:
+  - `https://azio.fun/api/auth/callback/google` (Google sign-in)
+  - `https://azio.fun/api/integrations/google/callback` (Calendar and Gmail)
+
+GitHub OAuth App (integrations only — not login):
+
+- Homepage: `https://azio.fun`
+- Callback: `https://azio.fun/api/integrations/github/callback`
+
+Tokens are encrypted at rest and never returned to the client. Disconnect wipes stored tokens and best-effort revokes Google / GitHub access.
+
+## Deployment (Vercel)
+
+The repo contains `vercel.json` (cron every 15 minutes). There is **no** GitHub Actions workflow and **no** linked `.vercel` project in git.
+
+Intended production split:
+
+1. **Web** — Vercel (`next start` via Vercel build). Production branch: `main`.
+2. **Database** — hosted PostgreSQL. This repo does **not** name a vendor. Set `DATABASE_URL` in Vercel. Migrate with `npm run db:migrate:deploy` (never `db push` in production).
+3. **Scheduler** — Vercel Cron → `GET /api/cron/automations` (sends `Authorization: Bearer $CRON_SECRET` when that env var is set). The route enqueues due automations and drains up to 3 queued jobs.
+4. **Worker** — optional dedicated process: `npm run worker`. Recommended if automations must run more often than the cron window. Redis is **not** required (`QUEUE_DRIVER=database`).
+5. **Canonical URL** — `https://azio.fun`. `https://www.azio.fun` 301s to the apex.
+
+### DNS (Vercel, external nameservers)
+
+Add `azio.fun` and `www.azio.fun` in the Vercel project **Settings → Domains**, then copy the values from that domain card if they differ. Vercel’s documented general-purpose records ([custom domain](https://vercel.com/docs/domains/set-up-custom-domain), [A records](https://vercel.com/kb/guide/a-record-and-caa-with-vercel)):
+
+| Type | Host | Value | TTL |
+| --- | --- | --- | --- |
+| A | `@` (azio.fun) | `76.76.21.21` | provider default (often Auto / 3600) |
+| CNAME | `www` | `cname.vercel-dns-0.com` | provider default (often Auto / 3600) |
+
+Confirm with `vercel domains inspect azio.fun` after the Vercel project exists. Do not point DNS until the project is created — a wrong A/CNAME will fail SSL.
+
+Vercel issues the certificate after DNS validates. HTTP→HTTPS is handled by Vercel. The app also 301s `www.azio.fun` → `https://azio.fun`.
+
+Set Vercel env `AUTH_URL=https://azio.fun` and `NEXT_PUBLIC_APP_URL=https://azio.fun`.
+
+Vercel Cron Jobs require a plan that includes crons (typically Pro). Hobby may not run `vercel.json` crons.
+
+### Production start commands
+
+- Web (Vercel): `npm run build` then the platform runs `next start`
+- Dedicated worker: `npm run worker`
+- Dedicated scheduler only: `npm run scheduler`
+- Production migrations: `npm run db:migrate:deploy`
 
 ## Security considerations
 
 - Protected pages require a session (`proxy.ts`). APIs authenticate independently.
-- Cron and worker health **must** use `Authorization: Bearer $CRON_SECRET` in production. Sessions cannot enqueue other users’ automations.
+- Cron and worker health **must** use `Authorization: Bearer $CRON_SECRET` in production. Vercel Cron injects this header when `CRON_SECRET` is set. Sessions cannot enqueue other users’ automations.
 - Razorpay webhooks verify HMAC of the raw body and are idempotent (`BillingWebhookEvent.eventKey`).
 - AI system instructions live on the server. Tools are a registry; SQL, shell, eval, and billing tools are forbidden.
 - External content (Gmail, GitHub, calendar, notes) is wrapped as untrusted data.
@@ -299,21 +351,11 @@ Copy `.env.example` to `.env`. Never commit `.env` or live credentials.
 - CSRF: Auth.js cookies + Next.js server-action origin checks. Do not add a second CSRF token stack.
 - Password reset is **not** implemented.
 
-## Deployment architecture
+## Health checks
 
-Recommended processes:
-
-1. **Web** — `npm run build && npm run start`
-2. **Worker** — `npm run worker` (includes scheduler unless `AUTOMATION_WORKER_INCLUDE_SCHEDULER=0`)
-3. **Scheduler** — optional split: `npm run scheduler`
-
-Put PostgreSQL behind TLS. Terminate HTTPS at the load balancer. Set `AUTH_URL` to the public HTTPS origin.
-
-Health:
-
-- Load balancer liveness: `GET /api/health`
-- Readiness before traffic: `GET /api/health/ready`
-- Worker probe (secret): `GET /api/health/worker`
+- Liveness: `GET /api/health`
+- Readiness (database): `GET /api/health/ready`
+- Worker (secret): `GET /api/health/worker`
 
 ## Database backups
 
@@ -331,7 +373,7 @@ Recommended:
 
 | Symptom | Likely cause |
 | --- | --- |
-| Automation stays Queued | Worker is not running |
+| Automation stays Queued | Cron/worker is not running, or Vercel plan has no Cron Jobs |
 | `INTEGRATION_ENCRYPTION_KEY is not set` | Required in production; set a dedicated 32-byte secret |
 | Cron 401 | Missing `Authorization: Bearer $CRON_SECRET` |
 | Health ready 503 | Database unreachable |

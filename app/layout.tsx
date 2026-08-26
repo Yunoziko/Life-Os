@@ -33,9 +33,10 @@ export const metadata: Metadata = {
     siteName: "AZIO",
     type: "website",
     url: "/",
+    locale: "en_IN",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "AZIO — Your life, organized intelligently.",
     description,
   },

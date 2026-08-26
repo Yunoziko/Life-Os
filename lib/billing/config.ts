@@ -1,3 +1,5 @@
+import { resolveAppUrl } from "@/lib/config";
+
 export type BillingPlanId = "FREE" | "PRO";
 export type BillingIntervalId = "MONTHLY" | "ANNUAL";
 export type FeatureKey =
@@ -130,10 +132,20 @@ export function formatPaise(paise: number) {
   }).format(paise / 100);
 }
 
+export function isLiveRazorpayKey(key = process.env.RAZORPAY_KEY_ID?.trim() ?? "") {
+  return key.startsWith("rzp_live_");
+}
+
+export function liveRazorpayPaymentsAllowed() {
+  return process.env.AZIO_ALLOW_LIVE_PAYMENTS === "true";
+}
+
 export function razorpayConfigured() {
-  return Boolean(
-    process.env.RAZORPAY_KEY_ID?.trim() && process.env.RAZORPAY_KEY_SECRET?.trim()
-  );
+  const key = process.env.RAZORPAY_KEY_ID?.trim();
+  const secret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  if (!key || !secret) return false;
+  if (isLiveRazorpayKey(key) && !liveRazorpayPaymentsAllowed()) return false;
+  return true;
 }
 
 export function razorpayWebhookConfigured() {
@@ -141,6 +153,7 @@ export function razorpayWebhookConfigured() {
 }
 
 export function publicRazorpayKeyId() {
+  if (!razorpayConfigured()) return "";
   return process.env.RAZORPAY_KEY_ID?.trim() || "";
 }
 
@@ -153,8 +166,5 @@ export function razorpayPlanId(interval: BillingIntervalId) {
 }
 
 export function appOrigin() {
-  return (process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    ""
-  );
+  return resolveAppUrl();
 }
