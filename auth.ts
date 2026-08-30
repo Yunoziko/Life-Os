@@ -5,6 +5,7 @@ import Google from "next-auth/providers/google";
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/db/prisma";
 import { isGoogleAuthEnabled } from "@/lib/config";
+import { runtimeEnv } from "@/lib/env/runtime";
 import { verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/validations/auth";
 
@@ -12,8 +13,8 @@ const providers = [
   ...(isGoogleAuthEnabled()
     ? [
         Google({
-          clientId: process.env.AUTH_GOOGLE_ID,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          clientId: runtimeEnv("AUTH_GOOGLE_ID"),
+          clientSecret: runtimeEnv("AUTH_GOOGLE_SECRET"),
         }),
       ]
     : []),

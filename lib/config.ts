@@ -1,3 +1,5 @@
+import { runtimeEnv } from "@/lib/env/runtime";
+
 export const PRODUCTION_ORIGIN = "https://azio.fun";
 export const PRODUCTION_WWW_ORIGIN = "https://www.azio.fun";
 
@@ -7,9 +9,9 @@ function trimOrigin(value: string | undefined) {
 
 export function resolveAppUrl() {
   const fromEnv =
-    trimOrigin(process.env.AUTH_URL) ||
-    trimOrigin(process.env.NEXTAUTH_URL) ||
-    trimOrigin(process.env.NEXT_PUBLIC_APP_URL);
+    trimOrigin(runtimeEnv("AUTH_URL")) ||
+    trimOrigin(runtimeEnv("NEXTAUTH_URL")) ||
+    trimOrigin(runtimeEnv("NEXT_PUBLIC_APP_URL"));
   if (fromEnv) return fromEnv;
   if (process.env.NODE_ENV === "production") return PRODUCTION_ORIGIN;
   return "http://localhost:3000";
@@ -21,5 +23,5 @@ export const appConfig = {
 } as const;
 
 export function isGoogleAuthEnabled() {
-  return Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+  return Boolean(runtimeEnv("AUTH_GOOGLE_ID") && runtimeEnv("AUTH_GOOGLE_SECRET"));
 }

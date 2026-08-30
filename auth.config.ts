@@ -1,8 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
 import { isProtectedPath } from "@/lib/navigation";
+import { runtimeEnv } from "@/lib/env/runtime";
 
 export const authConfig = {
   trustHost: true,
+  secret: runtimeEnv("AUTH_SECRET"),
   pages: {
     signIn: "/login",
   },
