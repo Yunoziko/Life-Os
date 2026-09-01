@@ -7,6 +7,8 @@ export const metadata = {
   description: "AZIO — Simple pricing. Powerful life management.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PricingPage() {
   const session = await getSession();
   return (

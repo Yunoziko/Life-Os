@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { SettingsNav } from "@/components/settings/settings-nav";
 import { BillingView } from "@/components/billing/billing-view";
+import { razorpayConfigured } from "@/lib/billing/config";
 import { getEntitlementSnapshot } from "@/lib/billing/entitlements";
 
 export const metadata = { title: "Billing" };
@@ -33,6 +34,7 @@ export default async function BillingSettingsPage({
         snapshot={snapshot}
         timezone={timezone}
         checkoutPending={params.checkout === "pending"}
+        billingReady={razorpayConfigured()}
       />
     </div>
   );

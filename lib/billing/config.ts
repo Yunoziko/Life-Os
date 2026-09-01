@@ -1,4 +1,9 @@
 import { resolveAppUrl } from "@/lib/config";
+import {
+  readAzioAllowLivePayments,
+  readRazorpayKeyId,
+  readRazorpayKeySecret,
+} from "@/lib/env/runtime";
 
 export type BillingPlanId = "FREE" | "PRO";
 export type BillingIntervalId = "MONTHLY" | "ANNUAL";
@@ -132,17 +137,17 @@ export function formatPaise(paise: number) {
   }).format(paise / 100);
 }
 
-export function isLiveRazorpayKey(key = process.env.RAZORPAY_KEY_ID?.trim() ?? "") {
+export function isLiveRazorpayKey(key = readRazorpayKeyId() ?? "") {
   return key.startsWith("rzp_live_");
 }
 
 export function liveRazorpayPaymentsAllowed() {
-  return process.env.AZIO_ALLOW_LIVE_PAYMENTS === "true";
+  return readAzioAllowLivePayments() === "true";
 }
 
 export function razorpayConfigured() {
-  const key = process.env.RAZORPAY_KEY_ID?.trim();
-  const secret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  const key = readRazorpayKeyId();
+  const secret = readRazorpayKeySecret();
   if (!key || !secret) return false;
   if (isLiveRazorpayKey(key) && !liveRazorpayPaymentsAllowed()) return false;
   return true;
@@ -154,7 +159,7 @@ export function razorpayWebhookConfigured() {
 
 export function publicRazorpayKeyId() {
   if (!razorpayConfigured()) return "";
-  return process.env.RAZORPAY_KEY_ID?.trim() || "";
+  return readRazorpayKeyId() || "";
 }
 
 export function razorpayPlanId(interval: BillingIntervalId) {

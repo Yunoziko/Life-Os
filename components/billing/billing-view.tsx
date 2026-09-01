@@ -5,7 +5,6 @@ import { statusLabel } from "@/lib/billing/subscriptions";
 import { PLAN_CATALOG } from "@/lib/billing/config";
 import { UpgradeButton } from "@/components/billing/upgrade-button";
 import { ManageBilling } from "@/components/billing/manage-billing";
-import { razorpayConfigured } from "@/lib/billing/config";
 import type { getEntitlementSnapshot } from "@/lib/billing/entitlements";
 
 type Snapshot = Awaited<ReturnType<typeof getEntitlementSnapshot>>;
@@ -14,14 +13,16 @@ export function BillingView({
   snapshot,
   timezone,
   checkoutPending,
+  billingReady,
 }: {
   snapshot: Snapshot;
   timezone: string;
   checkoutPending?: boolean;
+  billingReady: boolean;
 }) {
   const { plan, usage, limits, subscription } = snapshot;
   const pro = plan === "PRO";
-  const ready = razorpayConfigured();
+  const ready = billingReady;
 
   return (
     <div className="space-y-6">

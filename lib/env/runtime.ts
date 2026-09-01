@@ -25,6 +25,12 @@ export function runtimeEnv(name: string): string | undefined {
       return trimEnv(process.env.AUTH_GOOGLE_ID);
     case "AUTH_GOOGLE_SECRET":
       return trimEnv(process.env.AUTH_GOOGLE_SECRET);
+    case "RAZORPAY_KEY_ID":
+      return trimEnv(process.env.RAZORPAY_KEY_ID);
+    case "RAZORPAY_KEY_SECRET":
+      return trimEnv(process.env.RAZORPAY_KEY_SECRET);
+    case "AZIO_ALLOW_LIVE_PAYMENTS":
+      return trimEnv(process.env.AZIO_ALLOW_LIVE_PAYMENTS);
     default:
       return trimEnv(process.env[name]);
   }
@@ -36,4 +42,16 @@ export function readDatabaseUrl(): string | undefined {
 
 export function readAuthSecret(): string | undefined {
   return trimEnv(process.env.AUTH_SECRET);
+}
+
+export function readRazorpayKeyId(): string | undefined {
+  return trimEnv(process.env.RAZORPAY_KEY_ID);
+}
+
+export function readRazorpayKeySecret(): string | undefined {
+  return trimEnv(process.env.RAZORPAY_KEY_SECRET);
+}
+
+export function readAzioAllowLivePayments(): string | undefined {
+  return trimEnv(process.env.AZIO_ALLOW_LIVE_PAYMENTS);
 }
