@@ -23,7 +23,9 @@ export class EntitlementError extends Error {
 
 export type CheckoutSession = {
   keyId: string;
-  subscriptionId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
   plan: BillingPlanId;
   interval: BillingIntervalId;
   amountLabel: string;

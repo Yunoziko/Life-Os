@@ -40,7 +40,7 @@ export function ManageBilling({ cancelScheduled }: { cancelScheduled: boolean })
   return (
     <div className="mt-6 flex flex-wrap gap-2">
       <Button type="button" size="sm" variant="outline" disabled={pending !== null} onClick={() => void onSync()}>
-        {pending === "sync" ? "Refreshing…" : "Manage subscription"}
+        {pending === "sync" ? "Refreshing…" : "Refresh billing"}
       </Button>
       <Button
         type="button"

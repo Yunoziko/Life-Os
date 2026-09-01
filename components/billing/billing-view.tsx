@@ -27,15 +27,14 @@ export function BillingView({
     <div className="space-y-6">
       {checkoutPending ? (
         <p className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 text-sm">
-          Payment was submitted. Pro unlocks after Razorpay confirms the subscription — usually within a
-          few seconds. Refresh if it doesn’t update.
+          Payment was submitted. If Pro hasn’t unlocked yet, refresh this page in a moment.
         </p>
       ) : null}
 
       {subscription?.lastPaymentError ? (
         <p className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {subscription.lastPaymentError}{" "}
-          {ready ? "Use Manage subscription to update payment details." : null}
+          {ready ? "Use Refresh billing to check payment status." : null}
         </p>
       ) : null}
 

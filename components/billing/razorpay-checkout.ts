@@ -2,15 +2,22 @@
 
 import { toast } from "sonner";
 import type { CheckoutSession } from "@/lib/billing/errors";
+import { verifyCheckoutPaymentAction } from "@/lib/actions/billing";
 
 type RazorpayCheckout = new (options: {
   key: string;
-  subscription_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
   name: string;
   description: string;
   prefill?: { name?: string; email?: string };
   theme?: { color?: string };
-  handler: () => void;
+  handler: (response: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => void | Promise<void>;
   modal?: { ondismiss?: () => void };
 }) => { open: () => void };
 
@@ -42,7 +49,10 @@ function loadCheckoutScript() {
   });
 }
 
-export async function openRazorpayCheckout(session: CheckoutSession, onComplete?: () => void) {
+export async function openRazorpayCheckout(
+  session: CheckoutSession,
+  onComplete?: (result: { activated: boolean }) => void
+) {
   try {
     await loadCheckoutScript();
   } catch {
@@ -57,14 +67,27 @@ export async function openRazorpayCheckout(session: CheckoutSession, onComplete?
 
   const checkout = new window.Razorpay({
     key: session.keyId,
-    subscription_id: session.subscriptionId,
+    order_id: session.orderId,
+    amount: session.amount,
+    currency: session.currency,
     name: session.name,
     description: session.description,
     prefill: session.prefill,
     theme: { color: "#3f3a32" },
-    handler: () => {
-      toast.message("Payment received. AZIO will unlock Pro once Razorpay confirms it.");
-      onComplete?.();
+    handler: async (response) => {
+      const result = await verifyCheckoutPaymentAction({
+        razorpayOrderId: response.razorpay_order_id,
+        razorpayPaymentId: response.razorpay_payment_id,
+        razorpaySignature: response.razorpay_signature,
+      });
+
+      if (!result.ok || !result.data?.activated) {
+        toast.error(result.ok ? "Payment verification failed." : result.error);
+        return;
+      }
+
+      toast.success("AZIO Pro is active.");
+      onComplete?.({ activated: true });
     },
     modal: {
       ondismiss: () => {

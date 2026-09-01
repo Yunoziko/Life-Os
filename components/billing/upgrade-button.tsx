@@ -26,14 +26,14 @@ export function UpgradeButton({
 
   async function onUpgrade() {
     setPending(true);
-    const result = await startProCheckoutAction(interval);
+    const result = await startProCheckoutAction("PRO", interval);
     setPending(false);
     if (!result.ok || !result.data) {
       toast.error(result.ok ? "Could not start checkout." : result.error);
       return;
     }
     await openRazorpayCheckout(result.data, () => {
-      router.push("/settings/billing?checkout=pending");
+      router.push("/settings/billing");
       router.refresh();
     });
   }

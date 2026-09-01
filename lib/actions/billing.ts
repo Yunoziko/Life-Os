@@ -2,6 +2,7 @@
 
 import { requireUser } from "@/lib/auth/session";
 import { BillingError } from "@/lib/billing/errors";
+import { resolveCheckoutPlan, verifyCheckoutPayment } from "@/lib/billing/orders";
 import { startProCheckout, cancelOwnedSubscription, syncOwnedSubscription } from "@/lib/billing/subscriptions";
 import type { BillingIntervalId } from "@/lib/billing/config";
 import type { ActionResult } from "@/types";
@@ -16,19 +17,47 @@ function friendly(error: unknown) {
 }
 
 export async function startProCheckoutAction(
+  plan: string = "PRO",
   interval: BillingIntervalId = "MONTHLY"
 ): Promise<ActionResult<CheckoutSession>> {
   try {
     const user = await requireUser();
     await assertRateLimit("billing", user.id);
-    const safeInterval: BillingIntervalId = interval === "ANNUAL" ? "ANNUAL" : "MONTHLY";
+    const resolved = resolveCheckoutPlan({ plan, interval });
     const session = await startProCheckout({
       userId: user.id,
       email: user.email,
       name: user.profile?.displayName ?? user.name,
-      interval: safeInterval,
+      interval: resolved.interval,
     });
     return { ok: true, data: session };
+  } catch (error) {
+    return { ok: false, error: friendly(error) };
+  }
+}
+
+export async function verifyCheckoutPaymentAction(input: {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}): Promise<ActionResult<{ activated: boolean }>> {
+  try {
+    const user = await requireUser();
+    await assertRateLimit("billing", user.id);
+
+    if (!input.razorpayOrderId || !input.razorpayPaymentId || !input.razorpaySignature) {
+      throw new BillingError("invalid", "Payment details were incomplete.");
+    }
+
+    const result = await verifyCheckoutPayment({
+      userId: user.id,
+      razorpayOrderId: input.razorpayOrderId,
+      razorpayPaymentId: input.razorpayPaymentId,
+      razorpaySignature: input.razorpaySignature,
+    });
+
+    revalidateWorkspace(["/settings/billing", "/dashboard", "/pricing"]);
+    return { ok: true, data: { activated: result.activated } };
   } catch (error) {
     return { ok: false, error: friendly(error) };
   }

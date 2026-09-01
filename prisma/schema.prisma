@@ -112,6 +112,13 @@ enum SubscriptionStatus {
   PAUSED
 }
 
+enum PaymentOrderStatus {
+  CREATED
+  PAID
+  FAILED
+  EXPIRED
+}
+
 enum AIMessageRole {
   USER
   ASSISTANT
@@ -227,6 +234,7 @@ model User {
   integrations   IntegrationAccount[]
   externalMaps   ExternalItemMapping[]
   subscriptions  Subscription[]
+  paymentOrders  PaymentOrder[]
   aiUsage        AIUsage[]
   agents         Agent[]
   agentRuns      AgentRun[]
@@ -598,6 +606,7 @@ model Subscription {
   provider               String             @default("razorpay")
   providerCustomerId     String?
   providerSubscriptionId String?            @unique
+  providerOrderId        String?
   plan                   BillingPlan        @default(PRO)
   interval               BillingInterval    @default(MONTHLY)
   status                 SubscriptionStatus @default(CREATED)
@@ -608,7 +617,31 @@ model Subscription {
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentOrders PaymentOrder[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model PaymentOrder {
+  id                String             @id @default(uuid())
+  userId            String
+  subscriptionId    String?
+  plan              BillingPlan        @default(PRO)
+  interval          BillingInterval
+  amountPaise       Int
+  currency          String             @default("INR")
+  razorpayOrderId   String             @unique
+  razorpayPaymentId String?            @unique
+  status            PaymentOrderStatus @default(CREATED)
+  paidAt            DateTime?
+  failureReason     String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
 
   @@index([userId, status])
   @@index([userId, createdAt])

@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import type { SubscriptionStatus } from "@/generated/prisma/enums";
-import { PLAN_CATALOG, publicRazorpayKeyId, razorpayConfigured, type BillingIntervalId } from "@/lib/billing/config";
+import type { BillingIntervalId } from "@/lib/billing/config";
 import { BillingError, toSubscriptionStatus, type CheckoutSession, type ProviderSubscription } from "@/lib/billing/errors";
 import { getBillingProvider } from "@/lib/billing/provider";
+import { createProCheckoutOrder } from "@/lib/billing/orders";
 import { subscriptionGrantsPro } from "@/lib/billing/rules";
-import { getUserPlan } from "@/lib/billing/entitlements";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 
 function unixToDate(value: number | null | undefined) {
@@ -40,57 +40,13 @@ export async function startProCheckout(input: {
   name?: string | null;
   interval: BillingIntervalId;
 }): Promise<CheckoutSession> {
-  if (!razorpayConfigured()) {
-    throw new BillingError("not_configured", "Billing isn’t configured on this server yet.");
-  }
-
-  const plan = await getUserPlan(input.userId);
-  if (plan === "PRO") {
-    throw new BillingError("invalid", "You’re already on AZIO Pro.");
-  }
-
-  const provider = getBillingProvider();
-  const existing = await prisma.subscription.findFirst({
-    where: { userId: input.userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const created = await provider.createSubscription({
+  return createProCheckoutOrder({
     userId: input.userId,
     email: input.email,
     name: input.name,
-    interval: input.interval,
-    customerId: existing?.providerCustomerId,
-  });
-
-  await prisma.subscription.create({
-    data: {
-      userId: input.userId,
-      provider: provider.id,
-      providerCustomerId: created.customerId,
-      providerSubscriptionId: created.subscription.id,
-      plan: "PRO",
-      interval: input.interval,
-      status: toSubscriptionStatus(created.subscription.status) ?? "CREATED",
-      currentPeriodStart: unixToDate(created.subscription.currentStart),
-      currentPeriodEnd: unixToDate(created.subscription.currentEnd),
-    },
-  });
-
-  const definition = PLAN_CATALOG.PRO;
-  revalidateWorkspace(["/settings/billing", "/pricing"]);
-
-  return {
-    keyId: publicRazorpayKeyId(),
-    subscriptionId: created.subscription.id,
     plan: "PRO",
     interval: input.interval,
-    amountLabel: input.interval === "ANNUAL" ? definition.displayAnnual : definition.displayMonthly,
-    name: "AZIO Pro",
-    description:
-      input.interval === "ANNUAL" ? "AZIO Pro · billed yearly" : "AZIO Pro · billed monthly",
-    prefill: { name: input.name ?? undefined, email: input.email },
-  };
+  });
 }
 
 export async function cancelOwnedSubscription(userId: string) {
@@ -99,7 +55,7 @@ export async function cancelOwnedSubscription(userId: string) {
     orderBy: { createdAt: "desc" },
   });
 
-  if (!subscription?.providerSubscriptionId) {
+  if (!subscription) {
     throw new BillingError("invalid", "There’s no Pro subscription to cancel.");
   }
 
@@ -116,16 +72,22 @@ export async function cancelOwnedSubscription(userId: string) {
     return subscription;
   }
 
-  const provider = getBillingProvider();
-  const updated = await provider.cancelSubscription(subscription.providerSubscriptionId, {
-    atPeriodEnd: true,
-  });
+  if (subscription.providerSubscriptionId) {
+    const provider = getBillingProvider();
+    const updated = await provider.cancelSubscription(subscription.providerSubscriptionId, {
+      atPeriodEnd: true,
+    });
+    return prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        ...applyProviderSubscription(subscription, updated, { cancelAtPeriodEnd: true }),
+      },
+    });
+  }
 
   return prisma.subscription.update({
     where: { id: subscription.id },
-    data: {
-      ...applyProviderSubscription(subscription, updated, { cancelAtPeriodEnd: true }),
-    },
+    data: { cancelAtPeriodEnd: true },
   });
 }
 
@@ -134,18 +96,34 @@ export async function syncOwnedSubscription(userId: string) {
     where: { userId },
     orderBy: { createdAt: "desc" },
   });
-  if (!subscription?.providerSubscriptionId) {
-    throw new BillingError("invalid", "No Razorpay subscription is linked to this account.");
+
+  if (!subscription) {
+    throw new BillingError("invalid", "No billing record is linked to this account.");
   }
 
-  const provider = getBillingProvider();
-  const latest = await provider.getSubscription(subscription.providerSubscriptionId);
-  const next = await prisma.subscription.update({
-    where: { id: subscription.id },
-    data: applyProviderSubscription(subscription, latest),
+  if (subscription.providerSubscriptionId) {
+    const provider = getBillingProvider();
+    const latest = await provider.getSubscription(subscription.providerSubscriptionId);
+    const next = await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: applyProviderSubscription(subscription, latest),
+    });
+    revalidateWorkspace(["/settings/billing", "/dashboard"]);
+    return next;
+  }
+
+  const latestOrder = await prisma.paymentOrder.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
   });
+
+  if (latestOrder?.status === "FAILED" && subscription.lastPaymentError) {
+    revalidateWorkspace(["/settings/billing", "/dashboard"]);
+    return subscription;
+  }
+
   revalidateWorkspace(["/settings/billing", "/dashboard"]);
-  return next;
+  return subscription;
 }
 
 export async function cancelPaidSubscriptionsForDeletedUser(userId: string) {

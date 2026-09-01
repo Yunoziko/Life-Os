@@ -3,6 +3,7 @@ import { razorpayWebhookConfigured } from "@/lib/billing/config";
 import { BillingError } from "@/lib/billing/errors";
 import { verifyRazorpayWebhookSignature } from "@/lib/billing/provider";
 import { applyProviderSubscription } from "@/lib/billing/subscriptions";
+import { activateProFromWebhook, markPaymentOrderFailed } from "@/lib/billing/orders";
 import { revalidateWorkspace } from "@/lib/actions/workspace-revalidate";
 
 export type RazorpayWebhookPayload = {
@@ -12,6 +13,7 @@ export type RazorpayWebhookPayload = {
   payload?: {
     subscription?: { entity?: Record<string, unknown> };
     payment?: { entity?: Record<string, unknown> };
+    order?: { entity?: Record<string, unknown> };
   };
 };
 
@@ -37,9 +39,14 @@ function asProviderSubscription(entity: Record<string, unknown>) {
 export function webhookEventKey(event: string, body: RazorpayWebhookPayload) {
   const subscription = body.payload?.subscription?.entity;
   const payment = body.payload?.payment?.entity;
+  const order = body.payload?.order?.entity;
   const subscriptionId = subscription && typeof subscription.id === "string" ? subscription.id : "none";
+  const orderId =
+    order && typeof order.id === "string" ? order.id
+    : payment && typeof payment.order_id === "string" ? payment.order_id
+    : "none";
   const paymentId = payment && typeof payment.id === "string" ? payment.id : "";
-  return `razorpay:${event}:${subscriptionId}:${paymentId || body.created_at || "na"}`;
+  return `razorpay:${event}:${subscriptionId}:${orderId}:${paymentId || body.created_at || "na"}`;
 }
 
 export async function processRazorpayWebhook(rawBody: string, signature: string) {
@@ -76,15 +83,42 @@ export async function processRazorpayWebhook(rawBody: string, signature: string)
     throw error;
   }
 
-  const entity = body.payload?.subscription?.entity;
-  if (entity && typeof entity.id === "string") {
-    await applySubscriptionEvent(event, asProviderSubscription(entity), body);
+  if (event === "payment.captured" || event === "order.paid") {
+    await applyOrderPaymentEvent(body, event);
   } else if (event === "payment.failed") {
     await applyPaymentFailure(body);
+  } else {
+    const entity = body.payload?.subscription?.entity;
+    if (entity && typeof entity.id === "string") {
+      await applySubscriptionEvent(event, asProviderSubscription(entity), body);
+    }
   }
 
   revalidateWorkspace(["/settings/billing", "/dashboard", "/pricing"]);
   return { ok: true as const, duplicate: false, event };
+}
+
+async function applyOrderPaymentEvent(body: RazorpayWebhookPayload, event: string) {
+  const payment = body.payload?.payment?.entity;
+  const order = body.payload?.order?.entity;
+  const razorpayOrderId =
+    order && typeof order.id === "string" ? order.id
+    : payment && typeof payment.order_id === "string" ? payment.order_id
+    : null;
+  const razorpayPaymentId = payment && typeof payment.id === "string" ? payment.id : null;
+
+  if (!razorpayOrderId || !razorpayPaymentId) return;
+
+  if (event === "order.paid" && !paymentCaptured(payment)) {
+    return;
+  }
+
+  await activateProFromWebhook({ razorpayOrderId, razorpayPaymentId });
+}
+
+function paymentCaptured(payment: Record<string, unknown> | undefined) {
+  if (!payment) return false;
+  return payment.status === "captured" || payment.captured === true;
 }
 
 async function applySubscriptionEvent(
@@ -98,7 +132,7 @@ async function applySubscriptionEvent(
     where: { providerSubscriptionId: provider.id },
   });
 
-  const userId = provider.notes.lifeos_user_id;
+  const userId = provider.notes.lifeos_user_id || provider.notes.azio_user_id;
   if (!existing) {
     if (!userId) return;
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
@@ -108,7 +142,7 @@ async function applySubscriptionEvent(
         userId,
         provider: "razorpay",
         plan: "PRO",
-        interval: provider.notes.lifeos_interval === "ANNUAL" ? "ANNUAL" : "MONTHLY",
+        interval: provider.notes.lifeos_interval === "ANNUAL" || provider.notes.azio_interval === "ANNUAL" ? "ANNUAL" : "MONTHLY",
         ...applyProviderSubscription(
           { cancelAtPeriodEnd: false, lastPaymentError: null },
           provider,
@@ -151,8 +185,17 @@ function paymentExtras(event: string, body: RazorpayWebhookPayload) {
 
 async function applyPaymentFailure(body: RazorpayWebhookPayload) {
   const payment = body.payload?.payment?.entity;
+  const orderId = payment && typeof payment.order_id === "string" ? payment.order_id : undefined;
+  const paymentId = payment && typeof payment.id === "string" ? payment.id : undefined;
   const notes = stringNote(payment?.notes);
-  const userId = notes.lifeos_user_id;
+  const userId = notes.azio_user_id || notes.lifeos_user_id;
+
+  await markPaymentOrderFailed({
+    razorpayOrderId: orderId,
+    razorpayPaymentId: paymentId,
+    reason: "Your Pro payment needs attention.",
+  });
+
   if (!userId) return;
   const existing = await prisma.subscription.findFirst({
     where: { userId },
